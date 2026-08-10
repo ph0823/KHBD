@@ -16,35 +16,61 @@ async function callAI(context, requestData) {
     - Bài học: ${requestData.lessonName}
     - Điều kiện: ${requestData.condition}
     
-    NGỮ CẢNH TỪ SÁCH GIÁO KHOA / TÀI LIỆU CỦA GIÁO VIÊN:
+    NGỮ CẢNH TỪ TÀI LIỆU CỦA GIÁO VIÊN:
     ${context}
     
     YÊU CẦU ĐẦU RA:
-    Trả về cấu trúc JSON chứa: lesson, objectives(knowledge, generalCompetencies, informaticsCompetencies, qualities), equipment, activities(đúng 4 hoạt động: Mở đầu, Hình thành kiến thức, Luyện tập, Vận dụng, mỗi hoạt động có mục tiêu, nội dung, sản phẩm, tổ chức thực hiện [chuyển giao, thực hiện, báo cáo, kết luận]), assessment.
+    Trả về cấu trúc JSON chứa: lesson, objectives, equipment, activities, assessment.
     `;
 
-    const endpoint = provider === 'openrouter' 
-        ? "https://openrouter.ai/api/v1/chat/completions" 
-        : "https://api.openai.com/v1/chat/completions";
+    // 1. Nếu người dùng chọn GEMINI
+    if (provider === 'gemini') {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-            model: provider === 'openrouter' ? "google/gemini-pro" : "gpt-4o-mini", // Ví dụ
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                { role: "user", content: userPrompt }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.2 // Giảm ảo giác
-        })
-    });
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: SYSTEM_PROMPT + "\n\n" + userPrompt }]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json", // Bắt buộc AI trả về JSON chuẩn
+                    temperature: 0.2
+                }
+            })
+        });
 
-    if (!response.ok) throw new Error("Lỗi API AI");
-    const data = await response.json();
-    return JSON.parse(data.choices[0].message.content);
+        if (!response.ok) throw new Error("Lỗi API Gemini. Vui lòng kiểm tra lại API Key.");
+        const data = await response.json();
+        return JSON.parse(data.candidates[0].content.parts[0].text);
+    } 
+    
+    // 2. Nếu người dùng chọn OPENAI hoặc OPENROUTER
+    else {
+        const endpoint = provider === 'openrouter' 
+            ? "https://openrouter.ai/api/v1/chat/completions" 
+            : "https://api.openai.com/v1/chat/completions";
+            
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: provider === 'openrouter' ? "google/gemini-pro" : "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: SYSTEM_PROMPT },
+                    { role: "user", content: userPrompt }
+                ],
+                response_format: { type: "json_object" },
+                temperature: 0.2
+            })
+        });
+
+        if (!response.ok) throw new Error("Lỗi API OpenAI/OpenRouter");
+        const data = await response.json();
+        return JSON.parse(data.choices[0].message.content);
+    }
 }
