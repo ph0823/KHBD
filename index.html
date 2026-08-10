@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <!-- Tạo lần đầu lúc 10h ngày 10-08-2026 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI KHBD Tin Học THCS</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.9/lunr.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>AI KHBD Tin Học THCS (Công văn 5512)</h1>
+        <nav>
+            <button id="nav-config">Cài đặt API</button>
+            <button id="nav-docs">Kho Tài liệu</button>
+            <button id="nav-create">Tạo KHBD</button>
+        </nav>
+    </header>
+
+    <main id="app-content">
+        <!-- Cài đặt API -->
+        <section id="sec-config">
+            <h2>Cấu hình AI</h2>
+            <p class="warning">Lưu ý: API Key lưu tại trình duyệt (Client-side). Không dùng trên máy công cộng!</p>
+            <input type="password" id="api-key" placeholder="Nhập OpenAI / OpenRouter API Key">
+            <select id="api-provider">
+                <option value="openai">OpenAI (GPT-4o)</option>
+                <option value="openrouter">OpenRouter (Hỗ trợ nhiều model, tốt cho Web)</option>
+            </select>
+            <button onclick="saveConfig()">Lưu Cấu hình</button>
+        </section>
+
+        <!-- Tạo KHBD -->
+        <section id="sec-create" style="display:none;">
+            <h2>Tạo Kế hoạch bài dạy</h2>
+            <div class="form-group">
+                <label>Lớp:</label>
+                <select id="sel-grade"><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select>
+            </div>
+            <div class="form-group">
+                <label>Bộ sách:</label>
+                <select id="sel-book"><option>Kết nối tri thức</option><option>Cánh Diều</option><option>Chân trời sáng tạo</option></select>
+            </div>
+            <div class="form-group">
+                <label>Tên bài dạy:</label>
+                <input type="text" id="lesson-name" placeholder="Ví dụ: Bài 5 Định dạng số tiền và ngày tháng">
+            </div>
+            <div class="form-group">
+                <label>Điều kiện lớp học:</label>
+                <select id="sel-condition">
+                    <option>Phòng máy (có Internet)</option>
+                    <option>Phòng học thông thường + máy chiếu</option>
+                </select>
+            </div>
+            <button id="btn-generate" onclick="generateKHBD()">🤖 Phân tích & Tạo KHBD</button>
+            
+            <div id="loading" style="display:none;">AI đang làm việc (Tìm kiếm tài liệu -> Suy luận -> Tạo form -> Kiểm tra)...</div>
+            
+            <!-- Vùng hiển thị lỗi/Validate -->
+            <div id="validation-box" style="display:none;">
+                <h3>Kiểm tra chất lượng</h3>
+                <ul id="validation-list"></ul>
+                <button id="btn-fix" onclick="autoFix()">Tự động sửa lỗi</button>
+                <button id="btn-export" onclick="exportWord()" style="display:none;">⬇️ Xuất File Word (.docx)</button>
+            </div>
+        </section>
+    </main>
+    <script src="js/rag.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/validator.js"></script>
+    <script src="js/docx-export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
