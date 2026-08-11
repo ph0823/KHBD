@@ -69,7 +69,17 @@ async function callAI(context, requestData) {
             })
         });
 
-        if (!response.ok) throw new Error("Lỗi API OpenAI/OpenRouter");
+        if (!response.ok) {
+            // Đọc chi tiết lỗi từ máy chủ Google trả về
+            const errorData = await response.json();
+            
+            // In lỗi ra màn hình Console (F12) để lập trình viên dễ theo dõi
+            console.error("Chi tiết lỗi từ Google API:", errorData);
+            
+            // Hiển thị lỗi thực tế lên giao diện cho người dùng
+            const errorMessage = errorData.error?.message || "Lỗi không xác định từ máy chủ";
+            throw new Error(`Google API báo lỗi: ${errorMessage}`);
+        }
         const data = await response.json();
         return JSON.parse(data.choices[0].message.content);
     }

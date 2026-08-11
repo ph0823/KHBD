@@ -1,13 +1,17 @@
 // Hàm quản lý chuyển đổi các màn hình (Tabs)
 function showSection(sectionId) {
+    // 1. Ẩn tất cả các section
     document.getElementById('sec-config').style.display = 'none';
     document.getElementById('sec-create').style.display = 'none';
     
+    // 2. Bỏ class active ở tất cả các nút nav (nếu có)
     const navButtons = document.querySelectorAll('nav button');
     navButtons.forEach(btn => btn.classList.remove('active'));
 
+    // 3. Hiển thị section được yêu cầu
     document.getElementById(sectionId).style.display = 'block';
 
+    // 4. Highlight nút nav tương ứng
     if (sectionId === 'sec-config') {
         document.getElementById('nav-config').classList.add('active');
     } else if (sectionId === 'sec-create') {
@@ -15,42 +19,13 @@ function showSection(sectionId) {
     }
 }
 
+// Gắn sự kiện cho các nút trên thanh menu (Navigation)
 document.getElementById('nav-config').addEventListener('click', () => showSection('sec-config'));
 document.getElementById('nav-create').addEventListener('click', () => showSection('sec-create'));
+// Nếu có nút nav-docs (Kho tài liệu), bạn có thể gắn tương tự sau này.
 
-// kiểm tra tính hợp lệ của API Key
-async function verifyApiKey(provider, apiKey) {
-    try {
-        if (provider === 'gemini') {
-            // Gửi một request cực nhỏ (chỉ 1 chữ "hi") đến Gemini
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: "hi" }] }] })
-            });
-            return res.ok;
-        } else if (provider === 'openai') {
-            // Kiểm tra bằng cách lấy danh sách model của OpenAI
-            const res = await fetch('https://api.openai.com/v1/models', {
-                headers: { 'Authorization': `Bearer ${apiKey}` }
-            });
-            return res.ok;
-        } else if (provider === 'openrouter') {
-            // Kiểm tra bằng auth endpoint của OpenRouter
-            const res = await fetch('https://openrouter.ai/api/v1/auth/key', {
-                headers: { 'Authorization': `Bearer ${apiKey}` }
-            });
-            return res.ok;
-        }
-    } catch (e) {
-        console.error("Lỗi mạng khi kiểm tra API:", e);
-        return false;
-    }
-    return false;
-}
-
-// Hàm lưu cấu hình AI (Thêm await và logic kiểm tra)
-async function saveConfig() {
+// Hàm lưu cấu hình AI
+function saveConfig() {
     const apiKey = document.getElementById('api-key').value.trim();
     const provider = document.getElementById('api-provider').value;
 
@@ -59,39 +34,29 @@ async function saveConfig() {
         return;
     }
 
-    const btn = document.querySelector('button[onclick="saveConfig()"]');
-    const originalText = btn.innerText;
-    
-    // 1. Hiển thị trạng thái đang kiểm tra (Khóa nút bấm)
-    btn.innerText = "⏳ Đang kiểm tra kết nối...";
-    btn.style.backgroundColor = "var(--text-muted)"; // Chuyển màu xám
-    btn.disabled = true;
-
-    // 2. Gọi hàm xác thực
-    const isValid = await verifyApiKey(provider, apiKey);
-
-    // 3. Xử lý kết quả
-    if (!isValid) {
-        alert("❌ API Key không hợp lệ, đã hết hạn, hoặc không có kết nối mạng. Vui lòng kiểm tra lại!");
-        // Trả lại trạng thái nút
-        btn.innerText = originalText;
-        btn.style.backgroundColor = ""; 
-        btn.disabled = false;
-        return; // Dừng lại, không cho phép lưu
+    // THÊM MỚI: Kiểm tra định dạng cơ bản của API Key
+    if (provider === 'gemini') {
+        alert("⚠️ Cảnh báo: API Key của Google Gemini thường bắt đầu bằng chữ 'AIza'. Vui lòng kiểm tra lại!");
+        // Có thể thêm return; ở đây nếu bạn muốn chặn không cho lưu
+    } else if ((provider === 'openai' || provider === 'openrouter') && !apiKey.startsWith('sk-')) {
+        alert("⚠️ Cảnh báo: API Key của OpenAI/OpenRouter thường bắt đầu bằng 'sk-'. Vui lòng kiểm tra lại!");
     }
 
-    // 4. Nếu hợp lệ -> Lưu vào LocalStorage
+    // Lưu vào LocalStorage của trình duyệt
     localStorage.setItem('khbd_api_key', apiKey);
     localStorage.setItem('khbd_api_provider', provider);
 
-    // 5. Hiển thị thành công và chuyển trang
-    btn.innerText = "✅ Key hợp lệ! Đang chuyển trang...";
-    btn.style.backgroundColor = "var(--success-color)";
+    // Tạo hiệu ứng phản hồi cho người dùng
+    const btn = document.querySelector('button[onclick="saveConfig()"]');
+    const originalText = btn.innerText;
+    
+    btn.innerText = "✅ Đã lưu! Đang chuyển trang...";
+    btn.style.backgroundColor = "var(--success-color)"; 
 
+    // Đợi 1.5 giây để người dùng đọc thông báo, sau đó tự động chuyển trang
     setTimeout(() => {
         btn.innerText = originalText;
         btn.style.backgroundColor = ""; 
-        btn.disabled = false;
         showSection('sec-create');
     }, 1500);
 }
@@ -102,9 +67,12 @@ window.onload = function() {
     const savedProvider = localStorage.getItem('khbd_api_provider');
     
     if (savedKey) {
+        // Điền sẵn thông tin cũ
         document.getElementById('api-key').value = savedKey;
+        // Nếu đã có Key, ưu tiên hiển thị thẳng màn hình Tạo KHBD
         showSection('sec-create');
     } else {
+        // Nếu chưa có Key (lần đầu sử dụng), bắt buộc ở màn hình Cấu hình
         showSection('sec-config');
     }
 
