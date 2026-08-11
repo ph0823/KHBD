@@ -35,10 +35,7 @@ function saveConfig() {
     }
 
     // THÊM MỚI: Kiểm tra định dạng cơ bản của API Key
-    if (provider === 'gemini') {
-        alert("⚠️ Cảnh báo: API Key của Google Gemini thường bắt đầu bằng chữ 'AIza'. Vui lòng kiểm tra lại!");
-        // Có thể thêm return; ở đây nếu bạn muốn chặn không cho lưu
-    } else if ((provider === 'openai' || provider === 'openrouter') && !apiKey.startsWith('sk-')) {
+    if ((provider === 'openai' || provider === 'openrouter') && !apiKey.startsWith('sk-')) {
         alert("⚠️ Cảnh báo: API Key của OpenAI/OpenRouter thường bắt đầu bằng 'sk-'. Vui lòng kiểm tra lại!");
     }
 
