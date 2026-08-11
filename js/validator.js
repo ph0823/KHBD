@@ -31,8 +31,11 @@ async function generateKHBD() {
 function validateKHBD(json) {
     let errors = [];
     if (!json.activities || json.activities.length < 4) errors.push("Thiếu hoạt động (cần đủ 4: Mở đầu, HTKT, Luyện tập, Vận dụng)");
-    if (!json.objectives.informaticsCompetencies || json.objectives.informaticsCompetencies.length === 0) errors.push("Thiếu năng lực Tin học");
-    // Thêm các rule khác
+    
+    //  !json.objectives để tránh lỗi undefined
+    if (!json.objectives || !json.objectives.informaticsCompetencies || json.objectives.informaticsCompetencies.length === 0) errors.push("Thiếu năng lực Tin học");
+    
+    // Bạn có thể thêm các rule khác tại đây
     return errors;
 }
 
@@ -56,9 +59,28 @@ function displayValidation(errors) {
 }
 
 // Tính năng Tự sửa lỗi (Cho AI feedback lại chính JSON bị lỗi và yêu cầu sửa)
+// Tự động sửa lỗi (Đã hoàn thiện)
 async function autoFix() {
     document.getElementById('loading').style.display = 'block';
-    // Logic: Gọi lại hàm callAI với system prompt là "Hãy sửa các lỗi sau trong JSON..."
-    // ...
-    // Trả ra currentKHBD mới và chạy validate lại.
+    try {
+        const requestData = {
+            grade: document.getElementById('sel-grade').value,
+            book: document.getElementById('sel-book').value,
+            lessonName: document.getElementById('lesson-name').value,
+            condition: document.getElementById('sel-condition').value
+        };
+        
+        const errors = validateKHBD(currentKHBD);
+        const fixPrompt = `Hệ thống phát hiện các lỗi sau trong cấu trúc KHBD: ${errors.join(", ")}. Hãy sửa lại theo đúng yêu cầu và trả về JSON chuẩn. Dữ liệu KHBD bị lỗi: ${JSON.stringify(currentKHBD)}`;
+        
+        currentKHBD = await callAI(fixPrompt, requestData);
+        
+        // Validate lại
+        const validationResults = validateKHBD(currentKHBD);
+        displayValidation(validationResults);
+        
+    } catch (e) {
+        alert("Lỗi khi tự động sửa: " + e.message);
+    }
+    document.getElementById('loading').style.display = 'none';
 }
