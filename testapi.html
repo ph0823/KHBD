@@ -16,34 +16,67 @@
 
     <script>
         async function testAPI() {
-            // Khóa API của bạn đã được dán sẵn
+
             const apiKey = "AQ.Ab8RN6Ih7K_JoHX3SHRrqaPwAYuA3D3xD2Ko22ZuJbl9QhS_vw";
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            
-            document.getElementById('result').innerText = "Đang gửi yêu cầu đến Google...";
+
+            const endpoint =
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+            document.getElementById("result").innerText =
+                "Đang gửi yêu cầu đến Google...";
 
             try {
+
                 const response = await fetch(endpoint, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-goog-api-key": apiKey
+                    },
+
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Xin chào, hãy trả lời ngắn gọn: 1+1 bằng mấy?" }] }]
+                        contents: [
+                            {
+                                parts: [
+                                    {
+                                        text: "Xin chào, hãy trả lời ngắn gọn: 1+1 bằng mấy?"
+                                    }
+                                ]
+                            }
+                        ]
                     })
                 });
 
                 const data = await response.json();
-                
-                // Hiển thị trực tiếp phản hồi từ máy chủ Google
+
+                console.log("HTTP:", response.status);
+                console.log("Google:", data);
+
                 if (!response.ok) {
-                    document.getElementById('result').innerText = "❌ LỖI TỪ GOOGLE:\n" + JSON.stringify(data, null, 2);
-                } else {
-                    const answer = data.candidates[0].content.parts[0].text;
-                    document.getElementById('result').innerText = "✅ THÀNH CÔNG! AI trả lời:\n" + answer;
+
+                    document.getElementById("result").innerText =
+                        "❌ LỖI GOOGLE:\n\n" +
+                        JSON.stringify(data, null, 2);
+
+                    return;
                 }
+
+                const answer =
+                    data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                document.getElementById("result").innerText =
+                    "✅ API HOẠT ĐỘNG!\n\n" +
+                    "AI trả lời:\n" +
+                    answer;
+
             } catch (error) {
-                document.getElementById('result').innerText = "❌ Lỗi mạng hoặc kết nối:\n" + error.message;
+
+                document.getElementById("result").innerText =
+                    "❌ LỖI KẾT NỐI:\n\n" +
+                    error.message;
             }
         }
-    </script>
+        </script>
 </body>
 </html>
