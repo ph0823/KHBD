@@ -1,9 +1,40 @@
-// Quy trình Generate -> Validate -> Fix
-
 let currentKHBD = null;
+let timerInterval = null;
+let secondsCounter = 0;
 
+// ==========================================
+// HỆ THỐNG ĐẾM THỜI GIAN (TIMER)
+// ==========================================
+function startTimer() {
+    secondsCounter = 0;
+    const timerEl = document.getElementById('timer');
+    if (timerEl) timerEl.innerText = "00:00";
+    
+    if (timerInterval) clearInterval(timerInterval);
+    
+    timerInterval = setInterval(() => {
+        secondsCounter++;
+        let m = Math.floor(secondsCounter / 60).toString().padStart(2, '0');
+        let s = (secondsCounter % 60).toString().padStart(2, '0');
+        if (timerEl) timerEl.innerText = `${m}:${s}`;
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+// ==========================================
+// TẠO KẾ HOẠCH BÀI DẠY
+// ==========================================
 async function generateKHBD() {
     document.getElementById('loading').style.display = 'block';
+    document.getElementById('validation-box').style.display = 'none';
+    startTimer(); // Bắt đầu đếm giờ
+    
     try {
         const requestData = {
             grade: document.getElementById('sel-grade').value,
@@ -12,56 +43,31 @@ async function generateKHBD() {
             condition: document.getElementById('sel-condition').value
         };
         
-        // 1. Retrieval
+        // 1. Retrieval (Tìm kiếm tài liệu)
         const context = await searchKnowledgeBase(requestData.lessonName);
         
-        // 2. Generate
+        // 2. Generate (Gọi AI)
         currentKHBD = await callAI(context, requestData);
         
-        // 3. Validate
+        // 3. Validate (Kiểm tra)
         const validationResults = validateKHBD(currentKHBD);
         displayValidation(validationResults);
         
     } catch (e) {
         alert("Lỗi: " + e.message);
-    }
-    document.getElementById('loading').style.display = 'none';
-}
-
-function validateKHBD(json) {
-    let errors = [];
-    if (!json.activities || json.activities.length < 4) errors.push("Thiếu hoạt động (cần đủ 4: Mở đầu, HTKT, Luyện tập, Vận dụng)");
-    
-    //  !json.objectives để tránh lỗi undefined
-    if (!json.objectives || !json.objectives.informaticsCompetencies || json.objectives.informaticsCompetencies.length === 0) errors.push("Thiếu năng lực Tin học");
-    
-    // Bạn có thể thêm các rule khác tại đây
-    return errors;
-}
-
-function displayValidation(errors) {
-    const box = document.getElementById('validation-box');
-    const list = document.getElementById('validation-list');
-    box.style.display = 'block';
-    list.innerHTML = '';
-    
-    if (errors.length === 0) {
-        list.innerHTML = "<li style='color:green'>✓ Hoàn hảo. Không phát hiện lỗi.</li>";
-        document.getElementById('btn-fix').style.display = 'none';
-        document.getElementById('btn-export').style.display = 'block';
-    } else {
-        errors.forEach(err => {
-            list.innerHTML += `<li style='color:red'>✗ ${err}</li>`;
-        });
-        document.getElementById('btn-fix').style.display = 'inline-block';
-        document.getElementById('btn-export').style.display = 'none';
+    } finally {
+        stopTimer(); // Dừng đếm giờ dù thành công hay thất bại
+        document.getElementById('loading').style.display = 'none';
     }
 }
 
-// Tính năng Tự sửa lỗi (Cho AI feedback lại chính JSON bị lỗi và yêu cầu sửa)
-// Tự động sửa lỗi (Đã hoàn thiện)
+// ==========================================
+// TỰ ĐỘNG SỬA LỖI BẰNG AI
+// ==========================================
 async function autoFix() {
     document.getElementById('loading').style.display = 'block';
+    startTimer(); // Bắt đầu đếm giờ lại
+
     try {
         const requestData = {
             grade: document.getElementById('sel-grade').value,
@@ -75,12 +81,126 @@ async function autoFix() {
         
         currentKHBD = await callAI(fixPrompt, requestData);
         
-        // Validate lại
         const validationResults = validateKHBD(currentKHBD);
         displayValidation(validationResults);
         
     } catch (e) {
         alert("Lỗi khi tự động sửa: " + e.message);
+    } finally {
+        stopTimer();
+        document.getElementById('loading').style.display = 'none';
     }
-    document.getElementById('loading').style.display = 'none';
+}
+
+// ==========================================
+// KIỂM TRA CHẤT LƯỢNG (VALIDATOR)
+// ==========================================
+function validateKHBD(json) {
+    let errors = [];
+    if (!json.activities || json.activities.length < 4) {
+        errors.push("Thiếu hoạt động (cần tối thiểu 4: Mở đầu, HTKT, Luyện tập, Vận dụng)");
+    }
+    if (!json.objectives || !json.objectives.informaticsCompetencies || json.objectives.informaticsCompetencies.length === 0) {
+        errors.push("Thiếu năng lực Tin học");
+    }
+    if (!json.equipment || json.equipment.length === 0 || typeof json.equipment[0] === 'string') {
+        errors.push("Bảng Thiết bị dạy học và Học liệu chưa đúng định dạng chia cột (Đối tượng, Thiết bị, Mục đích)");
+    }
+    if (!json.appendix || json.appendix.length === 0) {
+        errors.push("Thiếu phần Phụ lục (Phiếu học tập và Đáp án) ở cuối bài");
+    }
+    return errors;
+}
+
+function displayValidation(errors) {
+    const box = document.getElementById('validation-box');
+    const list = document.getElementById('validation-list');
+    box.style.display = 'block';
+    list.innerHTML = '';
+    
+    if (errors.length === 0) {
+        list.innerHTML = "<li style='color:green; margin-bottom: 10px;'>✓ KHBD đã đạt chuẩn. Hãy xem trước nội dung bên dưới trước khi tải về.</li>";
+        document.getElementById('btn-fix').style.display = 'none';
+        
+        // Gọi hàm hiển thị Bản xem trước
+        renderPreview(currentKHBD);
+        
+        document.getElementById('btn-export').style.display = 'block';
+    } else {
+        errors.forEach(err => {
+            list.innerHTML += `<li style='color:red'>✗ ${err}</li>`;
+        });
+        document.getElementById('btn-fix').style.display = 'inline-block';
+        document.getElementById('btn-export').style.display = 'none';
+        document.getElementById('preview-box').style.display = 'none'; // Ẩn xem trước nếu có lỗi
+    }
+}
+
+// ==========================================
+// TÍNH NĂNG XEM TRƯỚC (PREVIEW)
+// ==========================================
+function renderPreview(json) {
+    const previewBox = document.getElementById('preview-box');
+    if (!json) {
+        previewBox.style.display = 'none';
+        return;
+    }
+
+    let html = `<h2 style="text-align: center; color: var(--primary-color);">KẾ HOẠCH BÀI DẠY: ${json.lesson.title.toUpperCase()}</h2>`;
+    html += `<p style="text-align: center; font-style: italic;">Thời gian thực hiện: ${json.lesson.duration || "2 tiết"}</p>`;
+    
+    // I. MỤC TIÊU
+    html += `<h3>I. MỤC TIÊU</h3>`;
+    html += `<p><strong>1. Kiến thức:</strong></p><ul>`;
+    json.objectives.knowledge.forEach(k => html += `<li>${k}</li>`);
+    html += `</ul>`;
+    
+    html += `<p><strong>2. Năng lực:</strong></p>`;
+    html += `<p><em>a. Năng lực chung:</em></p><ul>`;
+    json.objectives.generalCompetencies.forEach(c => html += `<li>${c}</li>`);
+    html += `</ul><p><em>b. Năng lực Tin học:</em></p><ul>`;
+    json.objectives.informaticsCompetencies.forEach(c => html += `<li>${c}</li>`);
+    html += `</ul>`;
+    
+    html += `<p><strong>3. Phẩm chất:</strong></p><ul>`;
+    json.objectives.qualities.forEach(q => html += `<li>${q}</li>`);
+    html += `</ul>`;
+
+    // II. THIẾT BỊ DẠY HỌC
+    html += `<h3>II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU</h3>`;
+    if (json.equipment && json.equipment.length > 0) {
+        html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1" cellpadding="5">`;
+        html += `<tr style="background-color: #f3f4f6;"><th>Đối tượng</th><th>Thiết bị, học liệu</th><th>Mục đích sử dụng</th></tr>`;
+        json.equipment.forEach(eq => {
+            html += `<tr><td>${eq.target || ""}</td><td>${eq.items || ""}</td><td>${eq.purpose || ""}</td></tr>`;
+        });
+        html += `</table>`;
+    }
+
+    // III. TIẾN TRÌNH DẠY HỌC
+    html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
+    json.activities.forEach((act, index) => {
+        html += `<h4 style="color: #2563eb; margin-top: 15px;">Hoạt động ${index + 1}: ${act.name}</h4>`;
+        html += `<p><strong>a) Mục tiêu:</strong> ${act.objectives.join("; ")}</p>`;
+        html += `<p><strong>b) Nội dung:</strong> ${act.content}</p>`;
+        html += `<p><strong>c) Sản phẩm:</strong> ${act.products}</p>`;
+        html += `<p><strong>d) Tổ chức thực hiện:</strong></p><ul>`;
+        html += `<li><strong>Chuyển giao:</strong> ${act.organization.transfer}</li>`;
+        html += `<li><strong>Thực hiện:</strong> ${act.organization.execute}</li>`;
+        html += `<li><strong>Báo cáo:</strong> ${act.organization.report}</li>`;
+        html += `<li><strong>Kết luận:</strong> ${act.organization.conclude}</li>`;
+        html += `</ul>`;
+    });
+
+    // PHỤ LỤC
+    if (json.appendix && json.appendix.length > 0) {
+        html += `<h3>PHỤ LỤC: PHIẾU HỌC TẬP VÀ ĐÁP ÁN</h3>`;
+        json.appendix.forEach(app => {
+            html += `<h4>${app.title}</h4>`;
+            html += `<p>${app.content.replace(/\n/g, '<br>')}</p>`; // Thay thế \n thành thẻ xuống dòng HTML
+        });
+    }
+
+    previewBox.innerHTML = html;
+    previewBox.style.display = 'block';
 }

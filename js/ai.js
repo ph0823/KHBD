@@ -22,6 +22,7 @@ Bạn am hiểu:
 - Năng lực chung
 - Năng lực Tin học
 - Năng lực số
+- Năng lực AI tích hợp (theo quyết định 3439 của Bộ Giáo dục và đào tạo)
 - Dạy học Tin học trong phòng máy
 - Dạy học theo định hướng phát triển năng lực
 - Kiểm tra đánh giá trong dạy học Tin học
@@ -101,6 +102,9 @@ NGUYÊN TẮC BẮT BUỘC
 18. Không trả lời bằng Markdown.
 
 19. Chỉ trả về JSON hợp lệ theo schema được yêu cầu.
+20. Phải tạo bảng Thiết bị dạy học chia theo: Giáo viên, Học sinh, Công cụ số, Dự phòng.
+21. Nếu có Năng lực số và AI, phải trình bày rõ: Mã, Biểu hiện, Hoạt động, Sản phẩm, Đánh giá.
+22. BẮT BUỘC phải tạo phần Phụ lục ở cuối cùng, chứa nội dung các Phiếu học tập, Trắc nghiệm, Bài tập và Đáp án chi tiết để giáo viên in ra cho học sinh.
 `;
 
 
@@ -109,188 +113,101 @@ NGUYÊN TẮC BẮT BUỘC
 // ============================================================
 
 const KHBD_SCHEMA = {
-
     type: "object",
-
     properties: {
-
         lesson: {
             type: "object",
             properties: {
-                title: {
-                    type: "string"
-                },
-                grade: {
-                    type: "string"
-                },
-                book: {
-                    type: "string"
-                }
+                title: { type: "string" },
+                grade: { type: "string" },
+                book: { type: "string" },
+                duration: { type: "string" } // Thêm thời lượng
             },
-            required: [
-                "title",
-                "grade",
-                "book"
-            ]
+            required: ["title", "grade", "book", "duration"]
         },
-
-
         objectives: {
-
             type: "object",
-
             properties: {
-
-                knowledge: {
-                    type: "array",
-                    items: {
-                        type: "string"
-                    }
+                knowledge: { type: "array", items: { type: "string" } },
+                generalCompetencies: { type: "array", items: { type: "string" } },
+                informaticsCompetencies: { type: "array", items: { type: "string" } },
+                digitalCompetencies: { 
+                    type: "array", 
+                    items: { 
+                        type: "object",
+                        properties: {
+                            code: { type: "string" },
+                            expression: { type: "string" },
+                            activity: { type: "string" },
+                            product: { type: "string" },
+                            assessment: { type: "string" }
+                        }
+                    } 
                 },
-
-                generalCompetencies: {
-                    type: "array",
-                    items: {
-                        type: "string"
-                    }
+                aiCompetencies: { 
+                    type: "array", 
+                    items: { 
+                        type: "object",
+                        properties: {
+                            code: { type: "string" },
+                            expression: { type: "string" },
+                            activity: { type: "string" },
+                            product: { type: "string" },
+                            assessment: { type: "string" }
+                        }
+                    } 
                 },
-
-                informaticsCompetencies: {
-                    type: "array",
-                    items: {
-                        type: "string"
-                    }
-                },
-
-                digitalCompetencies: {
-                    type: "array",
-                    items: {
-                        type: "string"
-                    }
-                },
-
-                qualities: {
-                    type: "array",
-                    items: {
-                        type: "string"
-                    }
-                }
-
+                qualities: { type: "array", items: { type: "string" } }
             },
-
-            required: [
-                "knowledge",
-                "generalCompetencies",
-                "informaticsCompetencies",
-                "digitalCompetencies",
-                "qualities"
-            ]
+            required: ["knowledge", "generalCompetencies", "informaticsCompetencies", "qualities"]
         },
-
-
         equipment: {
             type: "array",
             items: {
-                type: "string"
-            }
-        },
-
-
-        activities: {
-
-            type: "array",
-
-            minItems: 4,
-            maxItems: 4,
-
-            items: {
-
                 type: "object",
-
                 properties: {
-
-                    name: {
-                        type: "string"
-                    },
-
-                    objectives: {
-                        type: "array",
-                        items: {
-                            type: "string"
-                        }
-                    },
-
-                    content: {
-                        type: "string"
-                    },
-
-                    products: {
-                        type: "string"
-                    },
-
-                    organization: {
-
-                        type: "object",
-
-                        properties: {
-
-                            transfer: {
-                                type: "string"
-                            },
-
-                            execute: {
-                                type: "string"
-                            },
-
-                            report: {
-                                type: "string"
-                            },
-
-                            conclude: {
-                                type: "string"
-                            }
-
-                        },
-
-                        required: [
-                            "transfer",
-                            "execute",
-                            "report",
-                            "conclude"
-                        ]
-                    }
-
-                },
-
-                required: [
-                    "name",
-                    "objectives",
-                    "content",
-                    "products",
-                    "organization"
-                ]
+                    target: { type: "string", description: "VD: Giáo viên, Học sinh, Công cụ số, Dự phòng" },
+                    items: { type: "string" },
+                    purpose: { type: "string" }
+                }
             }
         },
-
-
-        assessment: {
-
+        activities: {
             type: "array",
-
+            minItems: 4,
             items: {
-                type: "string"
+                type: "object",
+                properties: {
+                    name: { type: "string" },
+                    objectives: { type: "array", items: { type: "string" } },
+                    content: { type: "string" },
+                    products: { type: "string" },
+                    organization: {
+                        type: "object",
+                        properties: {
+                            transfer: { type: "string" },
+                            execute: { type: "string" },
+                            report: { type: "string" },
+                            conclude: { type: "string" }
+                        },
+                        required: ["transfer", "execute", "report", "conclude"]
+                    }
+                },
+                required: ["name", "objectives", "content", "products", "organization"]
+            }
+        },
+        appendix: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    title: { type: "string", description: "Tên phụ lục (VD: Phiếu học tập 1, Hướng dẫn chấm)" },
+                    content: { type: "string", description: "Nội dung chi tiết của phiếu học tập hoặc đáp án" }
+                }
             }
         }
-
     },
-
-    required: [
-        "lesson",
-        "objectives",
-        "equipment",
-        "activities",
-        "assessment"
-    ]
+    required: ["lesson", "objectives", "equipment", "activities"]
 };
 
 
