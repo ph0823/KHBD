@@ -5,18 +5,34 @@ let secondsCounter = 0;
 // ==========================================
 // HỆ THỐNG ĐẾM THỜI GIAN (TIMER)
 // ==========================================
+let timerInterval = null;
+let secondsCounter = 0;
+
 function startTimer() {
+    // 1. Dọn dẹp bộ đếm cũ nếu có
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    
+    // 2. Reset thời gian về 0
     secondsCounter = 0;
-    const timerEl = document.getElementById('timer');
-    if (timerEl) timerEl.innerText = "00:00";
+    const initialTimerEl = document.getElementById('timer');
+    if (initialTimerEl) {
+        initialTimerEl.innerText = "00:00";
+    }
     
-    if (timerInterval) clearInterval(timerInterval);
-    
+    // 3. Khởi động bộ đếm mới
     timerInterval = setInterval(() => {
         secondsCounter++;
         let m = Math.floor(secondsCounter / 60).toString().padStart(2, '0');
         let s = (secondsCounter % 60).toString().padStart(2, '0');
-        if (timerEl) timerEl.innerText = `${m}:${s}`;
+        
+        // BÍ QUYẾT: Tìm lại element mỗi giây để đảm bảo không bị mất kết nối DOM
+        const currentTimerEl = document.getElementById('timer');
+        if (currentTimerEl) {
+            currentTimerEl.innerText = `${m}:${s}`;
+        }
     }, 1000);
 }
 
@@ -146,36 +162,72 @@ function renderPreview(json) {
         return;
     }
 
-    let html = `<h2 style="text-align: center; color: var(--primary-color);">KẾ HOẠCH BÀI DẠY: ${json.lesson.title.toUpperCase()}</h2>`;
-    html += `<p style="text-align: center; font-style: italic;">Thời gian thực hiện: ${json.lesson.duration || "2 tiết"}</p>`;
-    
-    // I. MỤC TIÊU
-    html += `<h3>I. MỤC TIÊU</h3>`;
-    html += `<p><strong>1. Kiến thức:</strong></p><ul>`;
-    json.objectives.knowledge.forEach(k => html += `<li>${k}</li>`);
-    html += `</ul>`;
-    
-    html += `<p><strong>2. Năng lực:</strong></p>`;
-    html += `<p><em>a. Năng lực chung:</em></p><ul>`;
-    json.objectives.generalCompetencies.forEach(c => html += `<li>${c}</li>`);
-    html += `</ul><p><em>b. Năng lực Tin học:</em></p><ul>`;
-    json.objectives.informaticsCompetencies.forEach(c => html += `<li>${c}</li>`);
-    html += `</ul>`;
-    
-    html += `<p><strong>3. Phẩm chất:</strong></p><ul>`;
-    json.objectives.qualities.forEach(q => html += `<li>${q}</li>`);
-    html += `</ul>`;
+    try {
+        let html = `<h2 style="text-align: center; color: var(--primary-color);">KẾ HOẠCH BÀI DẠY: ${(json.lesson?.title || "Chưa có tên bài").toUpperCase()}</h2>`;
+        html += `<p style="text-align: center; font-style: italic;">Thời gian thực hiện: ${json.lesson?.duration || "2 tiết"}</p>`;
+        
+        // I. MỤC TIÊU
+        html += `<h3>I. MỤC TIÊU</h3>`;
+        html += `<p><strong>1. Kiến thức:</strong></p><ul>`;
+        (json.objectives?.knowledge || []).forEach(k => html += `<li>${k}</li>`);
+        html += `</ul>`;
+        
+        html += `<p><strong>2. Năng lực:</strong></p>`;
+        html += `<p><em>a. Năng lực chung:</em></p><ul>`;
+        (json.objectives?.generalCompetencies || []).forEach(c => html += `<li>${c}</li>`);
+        html += `</ul><p><em>b. Năng lực Tin học:</em></p><ul>`;
+        (json.objectives?.informaticsCompetencies || []).forEach(c => html += `<li>${c}</li>`);
+        html += `</ul>`;
+        
+        html += `<p><strong>3. Phẩm chất:</strong></p><ul>`;
+        (json.objectives?.qualities || []).forEach(q => html += `<li>${q}</li>`);
+        html += `</ul>`;
 
-    // II. THIẾT BỊ DẠY HỌC
-    html += `<h3>II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU</h3>`;
-    if (json.equipment && json.equipment.length > 0) {
-        html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1" cellpadding="5">`;
-        html += `<tr style="background-color: #f3f4f6;"><th>Đối tượng</th><th>Thiết bị, học liệu</th><th>Mục đích sử dụng</th></tr>`;
-        json.equipment.forEach(eq => {
-            html += `<tr><td>${eq.target || ""}</td><td>${eq.items || ""}</td><td>${eq.purpose || ""}</td></tr>`;
+        // II. THIẾT BỊ DẠY HỌC
+        html += `<h3>II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU</h3>`;
+        if (json.equipment && json.equipment.length > 0) {
+            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1" cellpadding="5">`;
+            html += `<tr style="background-color: #f3f4f6;"><th>Đối tượng</th><th>Thiết bị, học liệu</th><th>Mục đích sử dụng</th></tr>`;
+            json.equipment.forEach(eq => {
+                html += `<tr><td>${eq?.target || ""}</td><td>${eq?.items || ""}</td><td>${eq?.purpose || ""}</td></tr>`;
+            });
+            html += `</table>`;
+        }
+
+        // III. TIẾN TRÌNH DẠY HỌC
+        html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
+        (json.activities || []).forEach((act, index) => {
+            html += `<h4 style="color: #2563eb; margin-top: 15px;">Hoạt động ${index + 1}: ${act?.name || "Chưa có tên"}</h4>`;
+            html += `<p><strong>a) Mục tiêu:</strong> ${(act?.objectives || []).join("; ")}</p>`;
+            html += `<p><strong>b) Nội dung:</strong> ${act?.content || ""}</p>`;
+            html += `<p><strong>c) Sản phẩm:</strong> ${act?.products || ""}</p>`;
+            html += `<p><strong>d) Tổ chức thực hiện:</strong></p><ul>`;
+            html += `<li><strong>Chuyển giao:</strong> ${act?.organization?.transfer || ""}</li>`;
+            html += `<li><strong>Thực hiện:</strong> ${act?.organization?.execute || ""}</li>`;
+            html += `<li><strong>Báo cáo:</strong> ${act?.organization?.report || ""}</li>`;
+            html += `<li><strong>Kết luận:</strong> ${act?.organization?.conclude || ""}</li>`;
+            html += `</ul>`;
         });
-        html += `</table>`;
+
+        // PHỤ LỤC
+        if (json.appendix && json.appendix.length > 0) {
+            html += `<h3>PHỤ LỤC: PHIẾU HỌC TẬP VÀ ĐÁP ÁN</h3>`;
+            json.appendix.forEach(app => {
+                html += `<h4>${app?.title || ""}</h4>`;
+                let content = app?.content || "";
+                html += `<p>${content.replace(/\n/g, '<br>')}</p>`; // Thay thế \n thành thẻ xuống dòng HTML
+            });
+        }
+
+        previewBox.innerHTML = html;
+        previewBox.style.display = 'block';
+        
+    } catch (error) {
+        console.error("Lỗi khi render Preview:", error);
+        previewBox.innerHTML = `<p style="color: var(--danger-color); font-weight: bold;">⚠️ Không thể hiển thị bản xem trước do lỗi định dạng từ AI. Tuy nhiên, bạn vẫn có thể nhấn nút Xuất File Word để tải về.</p>`;
+        previewBox.style.display = 'block';
     }
+}
 
     // III. TIẾN TRÌNH DẠY HỌC
     html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
