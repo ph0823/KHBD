@@ -1,6 +1,4 @@
 let currentKHBD = null;
-let timerInterval = null;
-let secondsCounter = 0;
 
 // ==========================================
 // HỆ THỐNG ĐẾM THỜI GIAN (TIMER)
@@ -227,32 +225,4 @@ function renderPreview(json) {
         previewBox.innerHTML = `<p style="color: var(--danger-color); font-weight: bold;">⚠️ Không thể hiển thị bản xem trước do lỗi định dạng từ AI. Tuy nhiên, bạn vẫn có thể nhấn nút Xuất File Word để tải về.</p>`;
         previewBox.style.display = 'block';
     }
-}
-
-    // III. TIẾN TRÌNH DẠY HỌC
-    html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
-    json.activities.forEach((act, index) => {
-        html += `<h4 style="color: #2563eb; margin-top: 15px;">Hoạt động ${index + 1}: ${act.name}</h4>`;
-        html += `<p><strong>a) Mục tiêu:</strong> ${act.objectives.join("; ")}</p>`;
-        html += `<p><strong>b) Nội dung:</strong> ${act.content}</p>`;
-        html += `<p><strong>c) Sản phẩm:</strong> ${act.products}</p>`;
-        html += `<p><strong>d) Tổ chức thực hiện:</strong></p><ul>`;
-        html += `<li><strong>Chuyển giao:</strong> ${act.organization.transfer}</li>`;
-        html += `<li><strong>Thực hiện:</strong> ${act.organization.execute}</li>`;
-        html += `<li><strong>Báo cáo:</strong> ${act.organization.report}</li>`;
-        html += `<li><strong>Kết luận:</strong> ${act.organization.conclude}</li>`;
-        html += `</ul>`;
-    });
-
-    // PHỤ LỤC
-    if (json.appendix && json.appendix.length > 0) {
-        html += `<h3>PHỤ LỤC: PHIẾU HỌC TẬP VÀ ĐÁP ÁN</h3>`;
-        json.appendix.forEach(app => {
-            html += `<h4>${app.title}</h4>`;
-            html += `<p>${app.content.replace(/\n/g, '<br>')}</p>`; // Thay thế \n thành thẻ xuống dòng HTML
-        });
-    }
-
-    previewBox.innerHTML = html;
-    previewBox.style.display = 'block';
 }
