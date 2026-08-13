@@ -62,15 +62,28 @@
             </div>
             <button id="btn-generate" onclick="generateKHBD()">🤖 Phân tích & Tạo KHBD</button>
             
-            <div id="loading" style="display:none;">AI đang làm việc (Tìm kiếm tài liệu -> Suy luận -> Tạo form -> Kiểm tra)...</div>
+            <!-- Thay thế khu vực Loading cũ bằng đoạn này -->
+            <div id="loading" style="display:none; text-align: center;">
+                🤖 AI đang làm việc (Tìm kiếm tài liệu -> Suy luận -> Tạo form -> Kiểm tra)...<br>
+                <span style="font-size: 1.1em; color: var(--danger-color); font-weight: bold; margin-top: 10px; display: inline-block;">
+                    ⏱️ Thời gian chờ: <span id="timer">00:00</span>
+                </span>
+            </div>
             
-            <!-- Vùng hiển thị lỗi/Validate -->
+            <!-- Vùng hiển thị lỗi/Validate và Xem trước -->
             <div id="validation-box" style="display:none;">
                 <h3>Kiểm tra chất lượng</h3>
                 <ul id="validation-list"></ul>
                 <button id="btn-fix" onclick="autoFix()">Tự động sửa lỗi</button>
+                
+                <!-- TÍNH NĂNG MỚI: Khu vực Xem trước (Preview) -->
+                <div id="preview-box" style="display:none; border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 1.5rem; margin-top: 1.5rem; margin-bottom: 1.5rem; max-height: 500px; overflow-y: auto; background-color: #fff; color: #000;">
+                    <!-- Nội dung KHBD sẽ được render vào đây -->
+                </div>
+
                 <button id="btn-export" onclick="exportWord()" style="display:none;">⬇️ Xuất File Word (.docx)</button>
             </div>
+            
         </section>
     </main>
     <script src="js/rag.js"></script>
