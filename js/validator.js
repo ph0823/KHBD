@@ -176,11 +176,51 @@ function renderPreview(json) {
         html += `</ul><p><em>b. Năng lực Tin học:</em></p><ul>`;
         (json.objectives?.informaticsCompetencies || []).forEach(c => html += `<li>${c}</li>`);
         html += `</ul>`;
+        // c. Năng lực số (Trích xuất dạng tóm tắt)
+        if (json.objectives?.digitalCompetencies && json.objectives.digitalCompetencies.length > 0) {
+            html += `<p><em>c. Năng lực số:</em></p><ul>`;
+            json.objectives.digitalCompetencies.forEach(dc => {
+                html += `<li><strong>${dc?.code || ""}</strong>: ${dc?.expression || ""}</li>`;
+            });
+            html += `</ul>`;
+        }
         
+        // d. Năng lực AI (Trích xuất dạng tóm tắt)
+        if (json.objectives?.aiCompetencies && json.objectives.aiCompetencies.length > 0) {
+            html += `<p><em>d. Năng lực AI:</em></p><ul>`;
+            json.objectives.aiCompetencies.forEach(ai => {
+                html += `<li><strong>${ai?.code || ""}</strong>: ${ai?.expression || ""}</li>`;
+            });
+            html += `</ul>`;
+        }
+
         html += `<p><strong>3. Phẩm chất:</strong></p><ul>`;
         (json.objectives?.qualities || []).forEach(q => html += `<li>${q}</li>`);
         html += `</ul>`;
 
+        // VẼ BẢNG NĂNG LỰC SỐ
+        if (json.objectives?.digitalCompetencies && json.objectives.digitalCompetencies.length > 0) {
+            html += `<p><strong>4. Định hướng năng lực số:</strong></p>`;
+            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1" cellpadding="5">`;
+            html += `<tr style="background-color: #f3f4f6;"><th>Mã chỉ báo</th><th>Biểu hiện cụ thể</th><th>Hoạt động</th><th>Sản phẩm minh chứng</th><th>Công cụ & Đánh giá</th></tr>`;
+            json.objectives.digitalCompetencies.forEach(dc => {
+                html += `<tr><td>${dc?.code || ""}</td><td>${dc?.expression || ""}</td><td>${dc?.activity || ""}</td><td>${dc?.product || ""}</td><td>${dc?.assessment || ""}</td></tr>`;
+            });
+            html += `</table>`;
+        }
+
+        // VẼ BẢNG NĂNG LỰC AI
+        if (json.objectives?.aiCompetencies && json.objectives.aiCompetencies.length > 0) {
+            html += `<p><strong>5. Năng lực AI tích hợp:</strong></p>`;
+            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1" cellpadding="5">`;
+            html += `<tr style="background-color: #f3f4f6;"><th>Mã chỉ báo</th><th>Biểu hiện cụ thể</th><th>Hoạt động</th><th>Sản phẩm minh chứng</th><th>Công cụ & Đánh giá</th></tr>`;
+            json.objectives.aiCompetencies.forEach(ai => {
+                html += `<tr><td>${ai?.code || ""}</td><td>${ai?.expression || ""}</td><td>${ai?.activity || ""}</td><td>${ai?.product || ""}</td><td>${ai?.assessment || ""}</td></tr>`;
+            });
+            html += `</table>`;
+        }
+
+       
         // II. THIẾT BỊ DẠY HỌC
         html += `<h3>II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU</h3>`;
         if (json.equipment && json.equipment.length > 0) {
@@ -195,7 +235,7 @@ function renderPreview(json) {
         // III. TIẾN TRÌNH DẠY HỌC
         html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
         (json.activities || []).forEach((act, index) => {
-            html += `<h4 style="color: #2563eb; margin-top: 15px;">Hoạt động ${index + 1}: ${act?.name || "Chưa có tên"}</h4>`;
+            html += `<h4 style="color: #2563eb; margin-top: 15px;">${index + 1}: ${act?.name || "Chưa có tên"}</h4>`;
             html += `<p><strong>a) Mục tiêu:</strong> ${(act?.objectives || []).join("; ")}</p>`;
             html += `<p><strong>b) Nội dung:</strong> ${act?.content || ""}</p>`;
             html += `<p><strong>c) Sản phẩm:</strong> ${act?.products || ""}</p>`;

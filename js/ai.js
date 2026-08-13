@@ -56,7 +56,7 @@ NGUYÊN TẮC BẮT BUỘC
 
 6. KHBD phải theo định hướng Công văn 5512.
 
-7. Phải có đầy đủ 4 hoạt động:
+7. Phải có đầy đủ 4 hoạt động cho mỗi tiết dạy:
 
    Hoạt động 1: Mở đầu
    Hoạt động 2: Hình thành kiến thức
@@ -102,10 +102,13 @@ NGUYÊN TẮC BẮT BUỘC
 18. Không trả lời bằng Markdown.
 
 19. Chỉ trả về JSON hợp lệ theo schema được yêu cầu.
-20. Phải tạo bảng Thiết bị dạy học chia theo: Giáo viên, Học sinh, Công cụ số, Dự phòng.
-21. Nếu có Năng lực số và AI, phải trình bày rõ: Mã, Biểu hiện, Hoạt động, Sản phẩm, Đánh giá.
+20. Phải tạo bảng Thiết bị dạy học chia theo: Giáo viên, Học sinh, Công cụ số, Dự phòng. 
+    Điền CHI TIẾT thiết bị và mục đích sử dụng vào từng đối tượng, TUYỆT ĐỐI KHÔNG ĐỂ TRỐNG nội dung.
+21. Bắt buộc phải có đề xuất Năng lực số và Năng lực AI tích hợp, phải trình bày rõ: Mã, Biểu hiện, Hoạt động, Sản phẩm, Đánh giá.
 22. BẮT BUỘC phải tạo phần Phụ lục ở cuối cùng, chứa nội dung các Phiếu học tập, Trắc nghiệm, Bài tập và Đáp án chi tiết để giáo viên in ra cho học sinh.
+    BẮT BUỘC tạo mảng "appendix" chứa ít nhất 1 Phiếu học tập (có nội dung câu hỏi cụ thể, trắc nghiệm/tự luận) và Đáp án chi tiết để giáo viên in ra.
 `;
+
 
 
 // ============================================================
@@ -121,7 +124,7 @@ const KHBD_SCHEMA = {
                 title: { type: "string" },
                 grade: { type: "string" },
                 book: { type: "string" },
-                duration: { type: "string" } // Thêm thời lượng
+                duration: { type: "string" }
             },
             required: ["title", "grade", "book", "duration"]
         },
@@ -135,41 +138,30 @@ const KHBD_SCHEMA = {
                     type: "array", 
                     items: { 
                         type: "object",
-                        properties: {
-                            code: { type: "string" },
-                            expression: { type: "string" },
-                            activity: { type: "string" },
-                            product: { type: "string" },
-                            assessment: { type: "string" }
-                        }
+                        properties: { code: { type: "string" }, expression: { type: "string" }, activity: { type: "string" }, product: { type: "string" }, assessment: { type: "string" } },
+                        required: ["code", "expression", "activity", "product", "assessment"]
                     } 
                 },
                 aiCompetencies: { 
                     type: "array", 
                     items: { 
                         type: "object",
-                        properties: {
-                            code: { type: "string" },
-                            expression: { type: "string" },
-                            activity: { type: "string" },
-                            product: { type: "string" },
-                            assessment: { type: "string" }
-                        }
+                        properties: { code: { type: "string" }, expression: { type: "string" }, activity: { type: "string" }, product: { type: "string" }, assessment: { type: "string" } },
+                        required: ["code", "expression", "activity", "product", "assessment"]
                     } 
                 },
                 qualities: { type: "array", items: { type: "string" } }
             },
-            required: ["knowledge", "generalCompetencies", "informaticsCompetencies", "qualities"]
+            // ÉP BUỘC AI PHẢI TẠO NĂNG LỰC SỐ VÀ AI
+            required: ["knowledge", "generalCompetencies", "informaticsCompetencies", "digitalCompetencies", "aiCompetencies", "qualities"]
         },
         equipment: {
             type: "array",
             items: {
                 type: "object",
-                properties: {
-                    target: { type: "string", description: "VD: Giáo viên, Học sinh, Công cụ số, Dự phòng" },
-                    items: { type: "string" },
-                    purpose: { type: "string" }
-                }
+                properties: { target: { type: "string" }, items: { type: "string" }, purpose: { type: "string" } },
+                // ÉP BUỘC ĐIỀN ĐỦ THÔNG TIN THIẾT BỊ
+                required: ["target", "items", "purpose"]
             }
         },
         activities: {
@@ -178,20 +170,8 @@ const KHBD_SCHEMA = {
             items: {
                 type: "object",
                 properties: {
-                    name: { type: "string" },
-                    objectives: { type: "array", items: { type: "string" } },
-                    content: { type: "string" },
-                    products: { type: "string" },
-                    organization: {
-                        type: "object",
-                        properties: {
-                            transfer: { type: "string" },
-                            execute: { type: "string" },
-                            report: { type: "string" },
-                            conclude: { type: "string" }
-                        },
-                        required: ["transfer", "execute", "report", "conclude"]
-                    }
+                    name: { type: "string" }, objectives: { type: "array", items: { type: "string" } }, content: { type: "string" }, products: { type: "string" },
+                    organization: { type: "object", properties: { transfer: { type: "string" }, execute: { type: "string" }, report: { type: "string" }, conclude: { type: "string" } }, required: ["transfer", "execute", "report", "conclude"] }
                 },
                 required: ["name", "objectives", "content", "products", "organization"]
             }
@@ -200,14 +180,13 @@ const KHBD_SCHEMA = {
             type: "array",
             items: {
                 type: "object",
-                properties: {
-                    title: { type: "string", description: "Tên phụ lục (VD: Phiếu học tập 1, Hướng dẫn chấm)" },
-                    content: { type: "string", description: "Nội dung chi tiết của phiếu học tập hoặc đáp án" }
-                }
+                properties: { title: { type: "string" }, content: { type: "string" } },
+                required: ["title", "content"]
             }
         }
     },
-    required: ["lesson", "objectives", "equipment", "activities"]
+    // ÉP BUỘC PHẢI CÓ PHỤ LỤC
+    required: ["lesson", "objectives", "equipment", "activities", "appendix"]
 };
 
 

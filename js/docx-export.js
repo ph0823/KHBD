@@ -41,11 +41,20 @@ async function exportWord() {
         new Paragraph({ text: "b. Năng lực Tin học:", italics: true }),
         ...currentKHBD.objectives.informaticsCompetencies.map(c => new Paragraph({ text: `- ${c}` })),
         
+        ...(currentKHBD.objectives.digitalCompetencies?.length > 0 ? [
+            new Paragraph({ text: "c. Năng lực số:", italics: true }),
+            ...currentKHBD.objectives.digitalCompetencies.map(dc => new Paragraph({ text: `- ${dc.code || ""}: ${dc.expression || ""}` }))
+        ] : []),
+        ...(currentKHBD.objectives.aiCompetencies?.length > 0 ? [
+            new Paragraph({ text: "d. Năng lực AI:", italics: true }),
+            ...currentKHBD.objectives.aiCompetencies.map(ai => new Paragraph({ text: `- ${ai.code || ""}: ${ai.expression || ""}` }))
+        ] : []),
+
         new Paragraph({ text: "3. Phẩm chất:", bold: true }),
         ...currentKHBD.objectives.qualities.map(q => new Paragraph({ text: `- ${q}` }))
     ];
 
-    // Bảng Định hướng Năng lực số (nếu có)
+    // Bảng Định hướng Năng lực số 
     if (currentKHBD.objectives.digitalCompetencies && currentKHBD.objectives.digitalCompetencies.length > 0) {
         docChildren.push(new Paragraph({ text: "4. Định hướng năng lực số:", bold: true, spacing: { before: 200, after: 100 } }));
         const digitalTable = new Table({
@@ -68,6 +77,29 @@ async function exportWord() {
         docChildren.push(digitalTable);
     }
 
+    // Bảng Năng lực AI tích hợp
+    if (currentKHBD.objectives.aiCompetencies && currentKHBD.objectives.aiCompetencies.length > 0) {
+        docChildren.push(new Paragraph({ text: "5. Năng lực AI tích hợp (Quyết định 3439/QĐ-BGDĐT):", bold: true, spacing: { before: 200, after: 100 } }));
+        const aiTable = new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+                new TableRow({
+                    children: [
+                        createCell("Mã chỉ báo", true), createCell("Biểu hiện cụ thể của học sinh", true), 
+                        createCell("Hoạt động hình thành", true), createCell("Sản phẩm minh chứng", true), createCell("Công cụ và cách đánh giá", true)
+                    ]
+                }),
+                ...currentKHBD.objectives.aiCompetencies.map(ai => new TableRow({
+                    children: [
+                        createCell(ai.code || ""), createCell(ai.expression || ""), 
+                        createCell(ai.activity || ""), createCell(ai.product || ""), createCell(ai.assessment || "")
+                    ]
+                }))
+            ]
+        });
+        docChildren.push(aiTable);
+    }
+
     // II. THIẾT BỊ DẠY HỌC
     docChildren.push(new Paragraph({ text: "II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU", heading: HeadingLevel.HEADING_2, bold: true, spacing: { before: 400, after: 100 } }));
     if (currentKHBD.equipment && currentKHBD.equipment.length > 0) {
@@ -88,7 +120,7 @@ async function exportWord() {
     
     currentKHBD.activities.forEach((act, index) => {
         docChildren.push(
-            new Paragraph({ text: `Hoạt động ${index + 1}: ${act.name}`, bold: true, spacing: { before: 200, after: 100 } }),
+            new Paragraph({ text: `${index + 1}: ${act.name}`, bold: true, spacing: { before: 200, after: 100 } }),
             new Paragraph({ children: [new TextRun({ text: "a) Mục tiêu: ", bold: true }), new TextRun({ text: act.objectives.join("; ") })] }),
             new Paragraph({ children: [new TextRun({ text: "b) Nội dung: ", bold: true }), new TextRun({ text: act.content })] }),
             new Paragraph({ children: [new TextRun({ text: "c) Sản phẩm: ", bold: true }), new TextRun({ text: act.products })] }),
