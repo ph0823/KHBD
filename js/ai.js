@@ -105,8 +105,10 @@ NGUYÊN TẮC BẮT BUỘC
 20. Phải tạo bảng Thiết bị dạy học chia theo: Giáo viên, Học sinh, Công cụ số, Dự phòng. 
     Điền CHI TIẾT thiết bị và mục đích sử dụng vào từng đối tượng, TUYỆT ĐỐI KHÔNG ĐỂ TRỐNG nội dung.
 21. Bắt buộc phải có đề xuất Năng lực số và Năng lực AI tích hợp, phải trình bày rõ: Mã, Biểu hiện, Hoạt động, Sản phẩm, Đánh giá.
-22. BẮT BUỘC phải tạo phần Phụ lục ở cuối cùng, chứa nội dung các Phiếu học tập, Trắc nghiệm, Bài tập và Đáp án chi tiết để giáo viên in ra cho học sinh.
-    BẮT BUỘC tạo mảng "appendix" chứa ít nhất 1 Phiếu học tập (có nội dung câu hỏi cụ thể, trắc nghiệm/tự luận) và Đáp án chi tiết để giáo viên in ra.
+22. BẮT BUỘC phải tạo phần Phụ lục ở cuối cùng, chứa nội dung các Phiếu học tập và Đáp án chi tiết để giáo viên in ra cho học sinh.
+    - BẮT BUỘC tạo mảng "appendix" chứa ít nhất 2 Phiếu học tập (Ví dụ: Phiếu học tập A, Phiếu học tập B) phù hợp với từng hoạt động của bài.
+    - Trong mỗi Phiếu học tập, nội dung phải phân chia rõ ràng các phần: Trắc nghiệm (Nhận biết), Điền khuyết (Thông hiểu), và Tự luận/Thực hành (Vận dụng).
+    - Cuối phần Phụ lục, bắt buộc phải có một mục riêng cho "HƯỚNG DẪN CHẤM CỦA GIÁO VIÊN" liệt kê chi tiết đáp án và thang điểm cho từng phiếu.
 `;
 
 
@@ -163,20 +165,39 @@ const KHBD_SCHEMA = {
                 // ÉP BUỘC ĐIỀN ĐỦ THÔNG TIN THIẾT BỊ
                 required: ["target", "items", "purpose"]
             }
-        },
-        activities: {
+        },        
+        // Nhóm các hoạt động theo từng Tiết học
+        periods: {
             type: "array",
-            minItems: 4,
             items: {
                 type: "object",
                 properties: {
-                    name: { type: "string" }, objectives: { type: "array", items: { type: "string" } }, content: { type: "string" }, products: { type: "string" },
-                    organization: { type: "object", properties: { transfer: { type: "string" }, execute: { type: "string" }, report: { type: "string" }, conclude: { type: "string" } }, required: ["transfer", "execute", "report", "conclude"] }
+                    periodName: { type: "string", description: "Ví dụ: TIẾT 1: THÔNG TIN, DỮ LIỆU VÀ VẬT MANG TIN" },
+                    activities: {
+                        type: "array",
+                        minItems: 2,
+                        items: {
+                            type: "object",
+                            properties: {
+                                name: { type: "string" }, 
+                                objectives: { type: "array", items: { type: "string" } }, 
+                                content: { type: "string" }, 
+                                products: { type: "string" },
+                                organization: { 
+                                    type: "object", 
+                                    properties: { transfer: { type: "string" }, execute: { type: "string" }, report: { type: "string" }, conclude: { type: "string" } }, 
+                                    required: ["transfer", "execute", "report", "conclude"] 
+                                }
+                            },
+                            required: ["name", "objectives", "content", "products", "organization"]
+                        }
+                    }
                 },
-                required: ["name", "objectives", "content", "products", "organization"]
+                required: ["periodName", "activities"]
             }
         },
         appendix: {
+// ... (các phần dưới giữ nguyên) ...
             type: "array",
             items: {
                 type: "object",
@@ -186,7 +207,7 @@ const KHBD_SCHEMA = {
         }
     },
     // ÉP BUỘC PHẢI CÓ PHỤ LỤC
-    required: ["lesson", "objectives", "equipment", "activities", "appendix"]
+    required: ["lesson", "objectives", "equipment", "periods", "appendix"]
 };
 
 
