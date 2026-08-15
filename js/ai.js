@@ -116,6 +116,13 @@ Tuyệt đối không được gộp các tiết với nhau, không được b�
       + Nếu là Lớp 8 hoặc Lớp 9: Mã bắt buộc phải chứa cụm "TC2" (Ví dụ: 1.1.TC2a, 1.2.TC2b).
     - Mã Năng lực AI: Bắt buộc phải viết hoa chữ cái đầu (A, B, C, D) đi kèm số chủ đề và số thứ tự chỉ báo. Định dạng chuẩn phải giống như "A1.1", "B2.1", "C4.1". Tuyệt đối không tự bịa các mã nằm ngoài định dạng này
     - Các mã này phải được điền chính xác vào thuộc tính "code" trong cấu trúc JSON.
+// Thêm quy tắc này vào ngay dưới quy tắc số 23 trong SYSTEM_PROMPT
+
+24. PHÂN BỔ TIẾT HỌC (BẮT BUỘC): 
+    - Chú ý kỹ "Thời gian thực hiện" (số tiết) của bài học được cung cấp.
+    - Số lượng phần tử trong mảng "periods" BẮT BUỘC phải bằng đúng số tiết của bài học. 
+    - Ví dụ: Nếu bài học có 2 tiết, mảng "periods" phải có đúng 2 đối tượng (Tiết 1 và Tiết 2). Nếu bài 3 tiết thì phải có 3 đối tượng.
+    - CẢNH BÁO: Không được gộp nội dung của 2 tiết vào chung 1 đối tượng "period". Mỗi tiết học trong mảng phải tự chứa đủ 4 hoạt động độc lập.
 `;
 
 
@@ -1046,8 +1053,9 @@ Năng lực phải gắn với nhiệm vụ cụ thể.
 - Năng lực chung
 - Năng lực Tin học
 - Năng lực số
+- Năng lực AI
 
-Nếu tài liệu cung cấp mã năng lực số thì sử dụng
+Nếu tài liệu cung cấp mã năng lực số, mã năng lực AI thì sử dụng
 đúng mã được cung cấp.
 
 
