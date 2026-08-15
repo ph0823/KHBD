@@ -109,6 +109,12 @@ NGUYÊN TẮC BẮT BUỘC
     - BẮT BUỘC tạo mảng "appendix" chứa ít nhất 2 Phiếu học tập (Ví dụ: Phiếu học tập A, Phiếu học tập B) phù hợp với từng hoạt động của bài.
     - Trong mỗi Phiếu học tập, nội dung phải phân chia rõ ràng các phần: Trắc nghiệm (Nhận biết), Điền khuyết (Thông hiểu), và Tự luận/Thực hành (Vận dụng).
     - Cuối phần Phụ lục, bắt buộc phải có một mục riêng cho "HƯỚNG DẪN CHẤM CỦA GIÁO VIÊN" liệt kê chi tiết đáp án và thang điểm cho từng phiếu.
+
+23. QUY TẮC ĐẶT MÃ CHỈ BÁO NĂNG LỰC (BẮT BUỘC TUÂN THỦ NGHIÊM NGẶT):
+    - Mã Năng lực Tin học: Viết hoa chữ "NL" và chữ cái thường phía sau (Ví dụ: NLa, NLb).
+    - Mã Năng lực số: Tuân theo định dạng TC1 hoặc TC2 tùy theo lớp.
+    - Mã Năng lực AI: Bắt buộc phải viết hoa chữ cái đầu (A, B, C, D) đi kèm số chủ đề và số thứ tự chỉ báo. Định dạng chuẩn phải giống như "A1.1", "B2.1", "C4.1". Tuyệt đối không tự bịa các mã nằm ngoài định dạng này
+    - Các mã này phải được điền chính xác vào thuộc tính "code" trong cấu trúc JSON.
 `;
 
 
