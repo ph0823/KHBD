@@ -204,7 +204,6 @@ const KHBD_SCHEMA = {
             }
         },
         appendix: {
-/
             type: "array",
             items: {
                 type: "object",
