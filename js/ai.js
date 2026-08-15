@@ -56,26 +56,25 @@ NGUYÊN TẮC BẮT BUỘC
 
 6. KHBD phải theo định hướng Công văn 5512.
 
-7. Phải có đầy đủ 4 hoạt động cho mỗi tiết dạy:
-
-   Hoạt động 1: Mở đầu
-   Hoạt động 2: Hình thành kiến thức
-   Hoạt động 3: Luyện tập
-   Hoạt động 4: Vận dụng
+7. BẮT BUỘC mỗi "Tiết học" đều phải có cấu trúc độc lập gồm đầy đủ 4 hoạt động sau:
+   - Hoạt động 1: Mở đầu (Khởi động)
+   - Hoạt động 2: Hình thành kiến thức
+   - Hoạt động 3: Luyện tập
+   - Hoạt động 4: Vận dụng
+Tuyệt đối không được gộp các tiết với nhau, không được bỏ qua Hoạt động 1 ở các tiết học sau.
 
 8. Mỗi hoạt động phải có:
-
    - Mục tiêu
    - Nội dung
    - Sản phẩm
    - Tổ chức thực hiện
 
 9. Trong "Tổ chức thực hiện" phải thể hiện:
-
    - Chuyển giao nhiệm vụ
    - Thực hiện nhiệm vụ
    - Báo cáo/thảo luận
    - Kết luận/nhận định
+    Trình bày ngắn gọn lần lượt là: Bước 1, Bước 2, Bước 3, Bước 4. 
 
 10. Nội dung phải phù hợp học sinh THCS.
 
@@ -111,8 +110,10 @@ NGUYÊN TẮC BẮT BUỘC
     - Cuối phần Phụ lục, bắt buộc phải có một mục riêng cho "HƯỚNG DẪN CHẤM CỦA GIÁO VIÊN" liệt kê chi tiết đáp án và thang điểm cho từng phiếu.
 
 23. QUY TẮC ĐẶT MÃ CHỈ BÁO NĂNG LỰC (BẮT BUỘC TUÂN THỦ NGHIÊM NGẶT):
-    - Mã Năng lực Tin học: Viết hoa chữ "NL" và chữ cái thường phía sau (Ví dụ: NLa, NLb).
-    - Mã Năng lực số: Tuân theo định dạng TC1 hoặc TC2 tùy theo lớp.
+    - Mã Năng lực Tin học: Viết hoa chữ "NL" và chữ cái thường phía sau (Ví dụ: NLa, NLb).   
+    - Mã Năng lực số: Bắt buộc tuân theo định dạng chuẩn phụ thuộc vào thông tin Lớp học. 
+      + Nếu là Lớp 6 hoặc Lớp 7: Mã bắt buộc phải chứa cụm "TC1" (Ví dụ: 1.1.TC1a, 1.2.TC1b).
+      + Nếu là Lớp 8 hoặc Lớp 9: Mã bắt buộc phải chứa cụm "TC2" (Ví dụ: 1.1.TC2a, 1.2.TC2b).
     - Mã Năng lực AI: Bắt buộc phải viết hoa chữ cái đầu (A, B, C, D) đi kèm số chủ đề và số thứ tự chỉ báo. Định dạng chuẩn phải giống như "A1.1", "B2.1", "C4.1". Tuyệt đối không tự bịa các mã nằm ngoài định dạng này
     - Các mã này phải được điền chính xác vào thuộc tính "code" trong cấu trúc JSON.
 `;
@@ -181,7 +182,7 @@ const KHBD_SCHEMA = {
                     periodName: { type: "string", description: "Ví dụ: TIẾT 1: THÔNG TIN, DỮ LIỆU VÀ VẬT MANG TIN" },
                     activities: {
                         type: "array",
-                        minItems: 2,
+                        minItems: 4, //tạo đủ 4 hoạt động cho mỗi tiết
                         items: {
                             type: "object",
                             properties: {
@@ -203,7 +204,7 @@ const KHBD_SCHEMA = {
             }
         },
         appendix: {
-// ... (các phần dưới giữ nguyên) ...
+/
             type: "array",
             items: {
                 type: "object",
