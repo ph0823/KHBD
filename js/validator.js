@@ -111,8 +111,9 @@ async function autoFix() {
 // ==========================================
 function validateKHBD(json) {
     let errors = [];
-    if (!json.activities || json.activities.length < 4) {
-        errors.push("Thiếu hoạt động (cần tối thiểu 4: Mở đầu, HTKT, Luyện tập, Vận dụng)");
+    // CẬP NHẬT: Kiểm tra mảng periods thay vì activities
+    if (!json.periods || json.periods.length === 0) {
+        errors.push("Thiếu phần tiến trình dạy học (các tiết học).");
     }
     if (!json.objectives || !json.objectives.informaticsCompetencies || json.objectives.informaticsCompetencies.length === 0) {
         errors.push("Thiếu năng lực Tin học");
@@ -234,17 +235,23 @@ function renderPreview(json) {
 
         // III. TIẾN TRÌNH DẠY HỌC
         html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
-        (json.activities || []).forEach((act, index) => {
-            html += `<h4 style="color: #2563eb; margin-top: 15px;">${index + 1}: ${act?.name || "Chưa có tên"}</h4>`;
-            html += `<p><strong>a) Mục tiêu:</strong> ${(act?.objectives || []).join("; ")}</p>`;
-            html += `<p><strong>b) Nội dung:</strong> ${act?.content || ""}</p>`;
-            html += `<p><strong>c) Sản phẩm:</strong> ${act?.products || ""}</p>`;
-            html += `<p><strong>d) Tổ chức thực hiện:</strong></p><ul>`;
-            html += `<li><strong>Chuyển giao:</strong> ${act?.organization?.transfer || ""}</li>`;
-            html += `<li><strong>Thực hiện:</strong> ${act?.organization?.execute || ""}</li>`;
-            html += `<li><strong>Báo cáo:</strong> ${act?.organization?.report || ""}</li>`;
-            html += `<li><strong>Kết luận:</strong> ${act?.organization?.conclude || ""}</li>`;
-            html += `</ul>`;
+        (json.periods || []).forEach(period => {
+            // In ra tên Tiết học
+            html += `<h3 style="color: var(--danger-color); margin-top: 20px; border-bottom: 2px solid var(--danger-color); padding-bottom: 5px;">${period.periodName}</h3>`;
+            
+            // Lặp qua các hoạt động bên trong tiết học đó
+            (period.activities || []).forEach((act, index) => {
+                html += `<h4 style="color: var(--primary-color); margin-top: 15px;">${act?.name || "Chưa có tên"}</h4>`;
+                html += `<p><strong>a) Mục tiêu:</strong> ${(act?.objectives || []).join("; ")}</p>`;
+                html += `<p><strong>b) Nội dung:</strong> ${act?.content || ""}</p>`;
+                html += `<p><strong>c) Sản phẩm:</strong> ${act?.products || ""}</p>`;
+                html += `<p><strong>d) Tổ chức thực hiện:</strong></p><ul>`;
+                html += `<li><strong>Chuyển giao:</strong> ${act?.organization?.transfer || ""}</li>`;
+                html += `<li><strong>Thực hiện:</strong> ${act?.organization?.execute || ""}</li>`;
+                html += `<li><strong>Báo cáo:</strong> ${act?.organization?.report || ""}</li>`;
+                html += `<li><strong>Kết luận:</strong> ${act?.organization?.conclude || ""}</li>`;
+                html += `</ul>`;
+            });
         });
 
         // PHỤ LỤC

@@ -118,19 +118,31 @@ async function exportWord() {
     // III. TIẾN TRÌNH DẠY HỌC
     docChildren.push(new Paragraph({ text: "III. TIẾN TRÌNH DẠY HỌC", heading: HeadingLevel.HEADING_2, bold: true, spacing: { before: 400, after: 100 } }));
     
-    currentKHBD.activities.forEach((act, index) => {
-        docChildren.push(
-            new Paragraph({ text: `${index + 1}: ${act.name}`, bold: true, spacing: { before: 200, after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: "a) Mục tiêu: ", bold: true }), new TextRun({ text: act.objectives.join("; ") })] }),
-            new Paragraph({ children: [new TextRun({ text: "b) Nội dung: ", bold: true }), new TextRun({ text: act.content })] }),
-            new Paragraph({ children: [new TextRun({ text: "c) Sản phẩm: ", bold: true }), new TextRun({ text: act.products })] }),
-            new Paragraph({ children: [new TextRun({ text: "d) Tổ chức thực hiện:", bold: true })] }),
-            new Paragraph({ text: `- Bước 1 (Chuyển giao): ${act.organization.transfer}`, indent: { left: 720 } }),
-            new Paragraph({ text: `- Bước 2 (Thực hiện): ${act.organization.execute}`, indent: { left: 720 } }),
-            new Paragraph({ text: `- Bước 3 (Báo cáo): ${act.organization.report}`, indent: { left: 720 } }),
-            new Paragraph({ text: `- Bước 4 (Kết luận): ${act.organization.conclude}`, indent: { left: 720 }, spacing: { after: 200 } })
-        );
-    });
+    if (currentKHBD.periods) {
+        currentKHBD.periods.forEach(period => {
+            // Thêm Paragraph cho Tên Tiết học (In đậm)
+            docChildren.push(
+                new Paragraph({ text: period.periodName, bold: true, spacing: { before: 300, after: 100 } })
+            );
+
+            // Duyệt qua các hoạt động trong tiết
+            if (period.activities) {
+                period.activities.forEach((act, index) => {
+                    docChildren.push(
+                        new Paragraph({ text: `${act.name}`, bold: true, spacing: { before: 200, after: 100 } }),
+                        new Paragraph({ children: [new TextRun({ text: "a) Mục tiêu: ", bold: true }), new TextRun({ text: act.objectives.join("; ") })] }),
+                        new Paragraph({ children: [new TextRun({ text: "b) Nội dung: ", bold: true }), new TextRun({ text: act.content })] }),
+                        new Paragraph({ children: [new TextRun({ text: "c) Sản phẩm: ", bold: true }), new TextRun({ text: act.products })] }),
+                        new Paragraph({ children: [new TextRun({ text: "d) Tổ chức thực hiện:", bold: true })] }),
+                        new Paragraph({ text: `- Bước 1 (Chuyển giao): ${act.organization.transfer}`, indent: { left: 720 } }),
+                        new Paragraph({ text: `- Bước 2 (Thực hiện): ${act.organization.execute}`, indent: { left: 720 } }),
+                        new Paragraph({ text: `- Bước 3 (Báo cáo): ${act.organization.report}`, indent: { left: 720 } }),
+                        new Paragraph({ text: `- Bước 4 (Kết luận): ${act.organization.conclude}`, indent: { left: 720 }, spacing: { after: 200 } })
+                    );
+                });
+            }
+        });
+    }
 
     // PHỤ LỤC (Phiếu học tập)
     if (currentKHBD.appendix && currentKHBD.appendix.length > 0) {
