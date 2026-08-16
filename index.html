@@ -42,7 +42,7 @@
         <section id="sec-create" style="display:none;">
             <h2>Tạo Kế hoạch bài dạy</h2>
             
-            <!-- VÙNG LƯỚI (GRID) CHỨA CÁC Ô NHẬP LIỆU -->
+            <!-- VÙNG LƯỚI (GRID) CHỨA CÁC Ô NHẬP LIỆU -->          
             <div class="form-grid">
                 <div class="form-group">
                     <label>Lớp:</label>
@@ -63,8 +63,14 @@
                         <option>Phòng học thông thường + máy chiếu</option>
                     </select>
                 </div>
+                
+                <!-- THÊM MỚI: Ô nhập thời lượng dạy -->
+                <div class="form-group">
+                    <label>Thời lượng dạy:</label>
+                    <input type="text" id="lesson-duration" value="2 tiết" placeholder="Ví dụ: 1 tiết, 2 tiết, 3 tiết">
+                </div>
             </div>
-            <!-- KẾT THÚC VÙNG LƯỚI -->
+            <!-- KẾT THÚC VÙNG LƯỚI -->            
 
             <button id="btn-generate" onclick="generateKHBD()">🤖 Phân tích & Tạo KHBD</button>
             
