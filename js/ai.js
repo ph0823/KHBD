@@ -56,12 +56,13 @@ NGUYÊN TẮC BẮT BUỘC
 
 6. KHBD phải theo định hướng Công văn 5512.
 
-7. BẮT BUỘC mỗi "Tiết học" đều phải có cấu trúc độc lập gồm đầy đủ 4 hoạt động sau:
-   - Hoạt động 1: Mở đầu (Khởi động)
-   - Hoạt động 2: Hình thành kiến thức
-   - Hoạt động 3: Luyện tập
-   - Hoạt động 4: Vận dụng
-Tuyệt đối không được gộp các tiết với nhau, không được bỏ qua Hoạt động 1 ở các tiết học sau.
+7. BẮT BUỘC Tiến trình dạy học của toàn bộ bài học phải bao gồm 4 phần: 
+   - 1. Mở đầu (Khởi động)
+   - 2. Hình thành kiến thức mới (BẮT BUỘC chia thành các hoạt động con như Hoạt động 1, Hoạt động 2, ... bám sát các mục kiến thức cốt lõi của sách giáo khoa).
+   - 3. Luyện tập
+   - 4. Vận dụng
+   Tổng thể bài học chỉ trải qua 4 phần này 1 lần duy nhất.
+    
 
 8. Mỗi hoạt động phải có:
    - Mục tiêu
@@ -118,11 +119,12 @@ Tuyệt đối không được gộp các tiết với nhau, không được b�
     - Mã Năng lực AI: Bắt buộc phải viết hoa chữ cái đầu (A, B, C, D) đi kèm số chủ đề và số thứ tự chỉ báo. Định dạng chuẩn phải giống như "A1.1", "B2.1", "C4.1". Tuyệt đối không tự bịa các mã nằm ngoài định dạng này
     - Các mã này phải được điền chính xác vào thuộc tính "code" trong cấu trúc JSON.
 
-24. PHÂN BỔ TIẾT HỌC (BẮT BUỘC): 
-    - Chú ý kỹ "Thời gian thực hiện" (số tiết) của bài học được cung cấp.
-    - Số lượng phần tử trong mảng "periods" BẮT BUỘC phải bằng đúng số tiết của bài học. 
-    - Ví dụ: Nếu bài học có 2 tiết, mảng "periods" phải có đúng 2 đối tượng (Tiết 1 và Tiết 2). Nếu bài 3 tiết thì phải có 3 đối tượng.
-    - CẢNH BÁO: Không được gộp nội dung của 2 tiết vào chung 1 đối tượng "period". Mỗi tiết học trong mảng phải tự chứa đủ 4 hoạt động độc lập.
+24. PHÂN BỔ TIẾT HỌC (BẮT BUỘC):
+   - Chú ý kỹ "Thời gian thực hiện" (số tiết) của bài học được cung cấp.
+   - Số lượng phần tử trong mảng "periods" BẮT BUỘC phải bằng đúng số tiết của bài học.
+   - Nếu bài học có nhiều tiết, AI phải phân bổ các hoạt động của 4 phần trên vào các tiết sao cho hợp lý logic.
+   - Ví dụ (Bài 2 tiết): Tiết 1 có thể gồm Khởi động và một số hoạt động của Hình thành kiến thức mới. Tiết 2 sẽ tiếp tục phần Hình thành kiến thức mới (nếu còn), sau đó đến Luyện tập và Vận dụng. Không lặp lại hoạt động Khởi động ở Tiết 2.
+
 `;
 
 
@@ -180,7 +182,7 @@ const KHBD_SCHEMA = {
                 required: ["target", "items", "purpose"]
             }
         },        
-        // Nhóm các hoạt động theo từng Tiết học
+        // Các hoạt động theo từng Tiết học
         periods: {
             type: "array",
             items: {
@@ -189,11 +191,11 @@ const KHBD_SCHEMA = {
                     periodName: { type: "string", description: "Ví dụ: TIẾT 1: THÔNG TIN, DỮ LIỆU VÀ VẬT MANG TIN" },
                     activities: {
                         type: "array",
-                        minItems: 4, //tạo đủ 4 hoạt động cho mỗi tiết
+                        // AI tự do phân bổ số lượng hoạt động theo tiết
                         items: {
                             type: "object",
                             properties: {
-                                name: { type: "string" }, 
+                                name: { type: "string", description: "Ví dụ: 1. Khởi động, 2. Hình thành kiến thức mới, 3. Luyện tập, 4. Vận dụng,  hoặc Hoạt động 2.1: Tìm hiểu dữ liệu" }, 
                                 objectives: { type: "array", items: { type: "string" } }, 
                                 content: { type: "string" }, 
                                 products: { type: "string" },
