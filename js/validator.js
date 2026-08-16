@@ -251,8 +251,8 @@ function renderPreview(json) {
         // III. TIẾN TRÌNH DẠY HỌC
         html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
         (json.periods || []).forEach(period => {
-            // Chỉ in ra tên Tiết học nếu bài học có nhiều hơn 1 tiết
-            if (json.periods.length > 1) {
+            // Chỉ in ra tên Tiết học nếu bài học có nhiều hơn 1 tiết và biến periods tồn tại
+            if (json.periods && json.periods.length > 1) {
                 html += `<h3 style="color: var(--danger-color); margin-top: 20px; border-bottom: 2px solid var(--danger-color); padding-bottom: 5px;">${period.periodName}</h3>`;
             }
             
@@ -270,6 +270,8 @@ function renderPreview(json) {
                 html += `</ul>`;
             });
         });
+
+        // PHỤ LỤC
 
         // PHỤ LỤC
         if (json.appendix && json.appendix.length > 0) {
