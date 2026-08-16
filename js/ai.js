@@ -58,11 +58,11 @@ NGUYÊN TẮC BẮT BUỘC
 
 7. BẮT BUỘC Tiến trình dạy học của toàn bộ bài học phải bao gồm 4 phần: 
    - 1. Mở đầu (Khởi động)
-   - 2. Hình thành kiến thức mới (BẮT BUỘC chia thành các hoạt động con như Hoạt động 1, Hoạt động 2, ... bám sát các mục kiến thức cốt lõi của sách giáo khoa).
+   - 2. Hình thành kiến thức mới (TUYỆT ĐỐI KHÔNG gộp thành 1 hoạt động chung. BẮT BUỘC tách thành các hoạt động con như Hoạt động 2.1, Hoạt động 22, ... tương ứng với từng mục của bài trong sách giáo khoa).
    - 3. Luyện tập
    - 4. Vận dụng
    Tổng thể bài học chỉ trải qua 4 phần này 1 lần duy nhất.
-    
+
 
 8. Mỗi hoạt động phải có:
    - Mục tiêu
@@ -195,7 +195,7 @@ const KHBD_SCHEMA = {
                         items: {
                             type: "object",
                             properties: {
-                                name: { type: "string", description: "Ví dụ: 1. Khởi động, 2. Hình thành kiến thức mới, 3. Luyện tập, 4. Vận dụng,  hoặc Hoạt động 2.1: Tìm hiểu dữ liệu" }, 
+                                name: { type: "string", description: "BẮT BUỘC ghi rõ tên phân cấp. Ví dụ: Hoạt động 1: Khởi động; Hoạt động 2: Hình thành kiến thức, Hoạt động 2.1: Tìm hiểu dữ liệu; Hoạt động 2.2: Phân loại dữ liệu; Hoạt động 3: Luyện tập..." }, 
                                 objectives: { type: "array", items: { type: "string" } }, 
                                 content: { type: "string" }, 
                                 products: { type: "string" },

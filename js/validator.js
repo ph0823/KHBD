@@ -183,26 +183,29 @@ function renderPreview(json) {
         (json.objectives?.knowledge || []).forEach(k => html += `<li>${k}</li>`);
         html += `</ul>`;
         
-        html += `<p><strong>2. Năng lực:</strong></p>`;
-        html += `<p><em>a. Năng lực chung:</em></p><ul>`;
+        html += `<p><strong>2. Năng lực:</strong></p>`; 
+        html += `<p><strong>a. Năng lực chung:</strong></p><ul>`;
         (json.objectives?.generalCompetencies || []).forEach(c => html += `<li>${c}</li>`);
-        html += `</ul><p><em>b. Năng lực Tin học:</em></p><ul>`;
+        html += `</ul>`;        
+        
+        html += `<p><strong>b. Năng lực Tin học:</strong></p><ul>`;
         (json.objectives?.informaticsCompetencies || []).forEach(c => html += `<li>${c}</li>`);
         html += `</ul>`;
+        
         // c. Năng lực số 
         if (json.objectives?.digitalCompetencies && json.objectives.digitalCompetencies.length > 0) {
-            html += `<p><em>c. Năng lực số:</em></p><ul>`;
-            json.objectives.digitalCompetencies.forEach(dc => {
-                html += `<li><strong>${dc?.code || ""}</strong>: ${dc?.expression || ""}</li>`;
+            html += `<p><strong>c. Năng lực số:</strong></p><ul>`;
+            json.objectives.digitalCompetencies.forEach(dc => {                
+                html += `<li>${dc?.code || ""}: ${dc?.expression || ""}</li>`;
             });
             html += `</ul>`;
         }
         
         // d. Năng lực AI 
         if (json.objectives?.aiCompetencies && json.objectives.aiCompetencies.length > 0) {
-            html += `<p><em>d. Năng lực AI:</em></p><ul>`;
-            json.objectives.aiCompetencies.forEach(ai => {
-                html += `<li><strong>${ai?.code || ""}</strong>: ${ai?.expression || ""}</li>`;
+            html += `<p><strong>d. Năng lực AI:</strong></p><ul>`;
+            json.objectives.aiCompetencies.forEach(ai => {                
+                html += `<li>${ai?.code || ""}: ${ai?.expression || ""}</li>`;
             });
             html += `</ul>`;
         }
@@ -248,8 +251,13 @@ function renderPreview(json) {
         // III. TIẾN TRÌNH DẠY HỌC
         html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
         (json.periods || []).forEach(period => {
-            // In ra tên Tiết học
-            html += `<h3 style="color: var(--danger-color); margin-top: 20px; border-bottom: 2px solid var(--danger-color); padding-bottom: 5px;">${period.periodName}</h3>`;
+            // III. TIẾN TRÌNH DẠY HỌC
+        html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
+        (json.periods || []).forEach(period => {
+            // Chỉ in ra tên Tiết học nếu bài học có nhiều hơn 1 tiết
+            if (json.periods.length > 1) {
+                html += `<h3 style="color: var(--danger-color); margin-top: 20px; border-bottom: 2px solid var(--danger-color); padding-bottom: 5px;">${period.periodName}</h3>`;
+            }
             
             // Lặp qua các hoạt động bên trong tiết học đó
             (period.activities || []).forEach((act, index) => {
@@ -258,10 +266,10 @@ function renderPreview(json) {
                 html += `<p><strong>b) Nội dung:</strong> ${act?.content || ""}</p>`;
                 html += `<p><strong>c) Sản phẩm:</strong> ${act?.products || ""}</p>`;
                 html += `<p><strong>d) Tổ chức thực hiện:</strong></p><ul>`;
-                html += `<li>- ${act?.organization?.transfer || ""}</li>`;
-                html += `<li>- ${act?.organization?.execute || ""}</li>`;
-                html += `<li>- ${act?.organization?.report || ""}</li>`;
-                html += `<li>- ${act?.organization?.conclude || ""}</li>`;
+                html += `<li> ${act?.organization?.transfer || ""}</li>`;
+                html += `<li> ${act?.organization?.execute || ""}</li>`;
+                html += `<li> ${act?.organization?.report || ""}</li>`;
+                html += `<li> ${act?.organization?.conclude || ""}</li>`;
                 html += `</ul>`;
             });
         });

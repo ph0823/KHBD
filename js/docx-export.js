@@ -37,19 +37,20 @@ async function exportWord() {
         ...currentKHBD.objectives.knowledge.map(k => new Paragraph({ text: `- ${k}` })),
         
         new Paragraph({ children: [new TextRun({ text: "2. Năng lực:", bold: true })], spacing: { before: 100 } }),
-        new Paragraph({ children: [new TextRun({ text: "a. Năng lực chung:", italics: true })] }),
+        
+        new Paragraph({ children: [new TextRun({ text: "a. Năng lực chung:", bold: true })] }), // Đổi italics thành bold
         ...currentKHBD.objectives.generalCompetencies.map(c => new Paragraph({ text: `- ${c}` })),
         
-        new Paragraph({ children: [new TextRun({ text: "b. Năng lực Tin học:", italics: true })] }),
+        new Paragraph({ children: [new TextRun({ text: "b. Năng lực Tin học:", bold: true })] }), // Đổi italics thành bold
         ...currentKHBD.objectives.informaticsCompetencies.map(c => new Paragraph({ text: `- ${c}` })),
         
         ...(currentKHBD.objectives.digitalCompetencies?.length > 0 ? [
-            new Paragraph({ children: [new TextRun({ text: "c. Năng lực số:", italics: true })] }),
+            new Paragraph({ children: [new TextRun({ text: "c. Năng lực số:", bold: true })] }), // Đổi italics thành bold
             ...currentKHBD.objectives.digitalCompetencies.map(dc => new Paragraph({ text: `- ${dc.code || ""}: ${dc.expression || ""}` }))
         ] : []),
         
         ...(currentKHBD.objectives.aiCompetencies?.length > 0 ? [
-            new Paragraph({ children: [new TextRun({ text: "d. Năng lực AI:", italics: true })] }),
+            new Paragraph({ children: [new TextRun({ text: "d. Năng lực AI:", bold: true })] }), // Đổi italics thành bold
             ...currentKHBD.objectives.aiCompetencies.map(ai => new Paragraph({ text: `- ${ai.code || ""}: ${ai.expression || ""}` }))
         ] : []),
 
@@ -123,13 +124,15 @@ async function exportWord() {
     
     if (currentKHBD.periods) {
         currentKHBD.periods.forEach(period => {
-            // 2. Thêm Paragraph cho Tên Tiết học (In đậm)
-            docChildren.push(
-                new Paragraph({ 
-                    children: [new TextRun({ text: period.periodName, bold: true })], 
-                    spacing: { before: 300, after: 100 } 
-                })
-            );
+            // Chỉ thêm Paragraph cho Tên Tiết học nếu bài có nhiều hơn 1 tiết
+            if (currentKHBD.periods.length > 1) {
+                docChildren.push(
+                    new Paragraph({ 
+                        children: [new TextRun({ text: period.periodName, bold: true })], 
+                        spacing: { before: 300, after: 100 } 
+                    })
+                );
+            }
 
             // Duyệt qua các hoạt động trong tiết
             if (period.activities) {
