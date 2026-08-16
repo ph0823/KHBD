@@ -1,17 +1,19 @@
-/* =========================================
-   BIẾN MÀU SẮC & KHÔNG GIAN (CSS Variables)
+/* Giao diện tạo ngày 10-8, cập nhật lần 2 16-08
+
+   =========================================
+   BIẾN MÀU SẮC & KHÔNG GIAN
    ========================================= */
 :root {
-    --primary-color: #2563eb;       /* Xanh dương đậm */
+    --primary-color: #2563eb;       
     --primary-hover: #1d4ed8;
-    --success-color: #10b981;       /* Xanh lá */
+    --success-color: #10b981;       
     --success-hover: #059669;
-    --danger-color: #ef4444;        /* Đỏ */
-    --warning-bg: #fffbeb;          /* Vàng nhạt */
+    --danger-color: #ef4444;        
+    --warning-bg: #fffbeb;          
     --warning-text: #b45309;
-    --bg-color: #f3f4f6;            /* Nền xám nhạt */
-    --card-bg: #ffffff;             /* Nền thẻ trắng */
-    --text-main: #1f2937;           /* Chữ xám đậm */
+    --bg-color: #f3f4f6;            
+    --card-bg: #ffffff;             
+    --text-main: #1f2937;           
     --text-muted: #6b7280;
     --border-color: #e5e7eb;
     --border-radius: 8px;
@@ -76,8 +78,7 @@ nav button {
     transition: all 0.2s;
 }
 
-nav button:hover, 
-nav button.active {
+nav button:hover, nav button.active {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
@@ -87,24 +88,39 @@ nav button.active {
    MAIN CONTENT & SECTIONS
    ========================================= */
 main {
-    max-width: 800px;
-    margin: 2rem auto;
+    max-width: 1200px; /* Tối ưu chiều ngang cho màn hình máy tính */
+    margin: 1rem auto;
     padding: 0 1rem;
 }
 
 section {
     background: var(--card-bg);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 /* =========================================
-   FORMS & INPUTS
+   LAYOUT LƯỚI (GRID) CHO TẠO KHBD
    ========================================= */
+#sec-create {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Chia form thành 2 cột đều nhau */
+    gap: 1rem 1.5rem;
+}
+
+/* Ép các phần tử này trải dài toàn bộ 2 cột */
+#sec-create h2,
+#btn-generate,
+#loading,
+#validation-box,
+#preview-box {
+    grid-column: 1 / -1; 
+}
+
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0; /* Bỏ margin thừa vì đã dùng gap trong Grid */
 }
 
 .form-group label {
@@ -126,8 +142,7 @@ select {
     font-family: inherit;
 }
 
-input:focus,
-select:focus {
+input:focus, select:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -141,8 +156,7 @@ button {
     font-size: 1rem;
 }
 
-button[onclick="saveConfig()"],
-#btn-generate {
+button[onclick="saveConfig()"], #btn-generate {
     width: 100%;
     background-color: var(--primary-color);
     color: white;
@@ -155,9 +169,14 @@ button[onclick="saveConfig()"],
     margin-top: 1rem;
 }
 
-button[onclick="saveConfig()"]:hover,
-#btn-generate:hover {
+button[onclick="saveConfig()"]:hover, #btn-generate:hover {
     background-color: var(--primary-hover);
+}
+
+#btn-generate:disabled {
+    background-color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 #btn-export {
@@ -189,7 +208,7 @@ button[onclick="saveConfig()"]:hover,
 }
 
 /* =========================================
-   THÔNG BÁO & HIỂN THỊ TRẠNG THÁI
+   THÔNG BÁO, PREVIEW & HIỂN THỊ TRẠNG THÁI
    ========================================= */
 .warning {
     background-color: var(--warning-bg);
@@ -201,7 +220,6 @@ button[onclick="saveConfig()"]:hover,
     font-size: 0.9rem;
 }
 
-/* Animation cho Loading */
 #loading {
     margin-top: 1.5rem;
     padding: 1rem;
@@ -210,6 +228,8 @@ button[onclick="saveConfig()"]:hover,
     border-radius: var(--border-radius);
     text-align: center;
     font-weight: 500;
+    border: 1px solid #bfdbfe;
+    box-shadow: var(--box-shadow);
     animation: pulse 1.5s infinite;
 }
 
@@ -219,7 +239,6 @@ button[onclick="saveConfig()"]:hover,
     100% { opacity: 0.6; }
 }
 
-/* Hộp kiểm tra lỗi (Validator) */
 #validation-box {
     margin-top: 1.5rem;
     padding: 1.5rem;
@@ -243,8 +262,19 @@ button[onclick="saveConfig()"]:hover,
     border-bottom: none;
 }
 
+#preview-box {
+    max-height: calc(100vh - 250px); /* Tự động co giãn theo chiều cao trình duyệt */
+    overflow-y: auto; 
+    background-color: #fff; 
+    color: #000;
+    border: 1px solid var(--border-color); 
+    border-radius: var(--border-radius); 
+    padding: 1.5rem; 
+    margin-top: 1rem; 
+}
+
 /* =========================================
-   RESPONSIVE (ĐIỆN THOẠI & TABLET)
+   RESPONSIVE (Tự động xếp lại trên Điện thoại)
    ========================================= */
 @media (max-width: 640px) {
     header {
@@ -259,11 +289,8 @@ button[onclick="saveConfig()"]:hover,
         flex-wrap: wrap;
     }
     
-    main {
-        margin: 1rem auto;
-    }
-    
-    section {
-        padding: 1.5rem 1rem;
+    /* Trên điện thoại nhỏ, hủy 2 cột và đưa form về lại 1 cột dọc */
+    #sec-create {
+        grid-template-columns: 1fr;
     }
 }
