@@ -931,6 +931,7 @@ function buildUserPrompt(
         requestData?.condition ||
         "";
 
+    const duration = requestData?.duration || "2 tiết";
 
     const safeContext =
         context &&
@@ -946,18 +947,11 @@ THÔNG TIN YÊU CẦU
 ============================================================
 
 Môn học: Tin học
-
 Lớp: ${grade}
-
-Bộ sách:
-${book}
-
-Tên bài:
-${lessonName}
-
-Điều kiện dạy học:
-${condition}
-
+Bộ sách: ${book}
+Tên bài: ${lessonName}
+Điều kiện dạy học: ${condition}
+Thời lượng thực hiện: ${duration}
 
 ============================================================
 NGỮ CẢNH TỪ TÀI LIỆU GIÁO VIÊN

@@ -32,25 +32,28 @@ async function exportWord() {
         // I. MỤC TIÊU
         new Paragraph({ text: "I. MỤC TIÊU", heading: HeadingLevel.HEADING_2, bold: true }),
         
-        new Paragraph({ text: "1. Kiến thức:", bold: true }),
+        // 1. In đậm các mục Kiến thức, Năng lực, Phẩm chất
+        new Paragraph({ children: [new TextRun({ text: "1. Kiến thức:", bold: true })], spacing: { before: 100 } }),
         ...currentKHBD.objectives.knowledge.map(k => new Paragraph({ text: `- ${k}` })),
         
-        new Paragraph({ text: "2. Năng lực:", bold: true }),
-        new Paragraph({ text: "a. Năng lực chung:", italics: true }),
+        new Paragraph({ children: [new TextRun({ text: "2. Năng lực:", bold: true })], spacing: { before: 100 } }),
+        new Paragraph({ children: [new TextRun({ text: "a. Năng lực chung:", italics: true })] }),
         ...currentKHBD.objectives.generalCompetencies.map(c => new Paragraph({ text: `- ${c}` })),
-        new Paragraph({ text: "b. Năng lực Tin học:", italics: true }),
+        
+        new Paragraph({ children: [new TextRun({ text: "b. Năng lực Tin học:", italics: true })] }),
         ...currentKHBD.objectives.informaticsCompetencies.map(c => new Paragraph({ text: `- ${c}` })),
         
         ...(currentKHBD.objectives.digitalCompetencies?.length > 0 ? [
-            new Paragraph({ text: "c. Năng lực số:", italics: true }),
+            new Paragraph({ children: [new TextRun({ text: "c. Năng lực số:", italics: true })] }),
             ...currentKHBD.objectives.digitalCompetencies.map(dc => new Paragraph({ text: `- ${dc.code || ""}: ${dc.expression || ""}` }))
         ] : []),
+        
         ...(currentKHBD.objectives.aiCompetencies?.length > 0 ? [
-            new Paragraph({ text: "d. Năng lực AI:", italics: true }),
+            new Paragraph({ children: [new TextRun({ text: "d. Năng lực AI:", italics: true })] }),
             ...currentKHBD.objectives.aiCompetencies.map(ai => new Paragraph({ text: `- ${ai.code || ""}: ${ai.expression || ""}` }))
         ] : []),
 
-        new Paragraph({ text: "3. Phẩm chất:", bold: true }),
+        new Paragraph({ children: [new TextRun({ text: "3. Phẩm chất:", bold: true })], spacing: { before: 100 } }),
         ...currentKHBD.objectives.qualities.map(q => new Paragraph({ text: `- ${q}` }))
     ];
 
@@ -120,21 +123,29 @@ async function exportWord() {
     
     if (currentKHBD.periods) {
         currentKHBD.periods.forEach(period => {
-            // Thêm Paragraph cho Tên Tiết học (In đậm)
+            // 2. Thêm Paragraph cho Tên Tiết học (In đậm)
             docChildren.push(
-                new Paragraph({ text: period.periodName, bold: true, spacing: { before: 300, after: 100 } })
+                new Paragraph({ 
+                    children: [new TextRun({ text: period.periodName, bold: true })], 
+                    spacing: { before: 300, after: 100 } 
+                })
             );
 
             // Duyệt qua các hoạt động trong tiết
             if (period.activities) {
                 period.activities.forEach((act, index) => {
                     docChildren.push(
-                        new Paragraph({ text: `${act.name}`, bold: true, spacing: { before: 200, after: 100 } }),
+                        // 3. In đậm tên Hoạt động
+                        new Paragraph({ 
+                            children: [new TextRun({ text: act.name, bold: true })], 
+                            spacing: { before: 200, after: 100 } 
+                        }),
                         new Paragraph({ children: [new TextRun({ text: "a) Mục tiêu: ", bold: true }), new TextRun({ text: act.objectives.join("; ") })] }),
                         new Paragraph({ children: [new TextRun({ text: "b) Nội dung: ", bold: true }), new TextRun({ text: act.content })] }),
                         new Paragraph({ children: [new TextRun({ text: "c) Sản phẩm: ", bold: true }), new TextRun({ text: act.products })] }),
                         new Paragraph({ children: [new TextRun({ text: "d) Tổ chức thực hiện:", bold: true })] }),
-                        // AI sẽ tự sinh ra "Bước 1:...", nên chỉ cần gắn nội dung vào Word
+                        
+                        // AI tự sinh ra "Bước 1:...", nên chỉ cần gắn nội dung vào Word
                         new Paragraph({ text: `- ${act.organization.transfer}`, indent: { left: 720 } }),
                         new Paragraph({ text: `- ${act.organization.execute}`, indent: { left: 720 } }),
                         new Paragraph({ text: `- ${act.organization.report}`, indent: { left: 720 } }),
@@ -149,10 +160,26 @@ async function exportWord() {
     if (currentKHBD.appendix && currentKHBD.appendix.length > 0) {
         docChildren.push(new Paragraph({ text: "PHỤ LỤC: PHIẾU HỌC TẬP VÀ ĐÁP ÁN", heading: HeadingLevel.HEADING_2, bold: true, pageBreakBefore: true }));
         currentKHBD.appendix.forEach(app => {
+            // 4. In đậm tiêu đề phiếu học tập
             docChildren.push(
-                new Paragraph({ text: app.title, bold: true, spacing: { before: 200, after: 100 } }),
-                new Paragraph({ text: app.content, spacing: { after: 200 } })
+                new Paragraph({ 
+                    children: [new TextRun({ text: app.title, bold: true })], 
+                    spacing: { before: 300, after: 150 } 
+                })
             );
+            
+            // 5. Xử lý xuống dòng cho nội dung phiếu học tập (chia tách bằng \n)
+            let contentText = app.content || "";
+            let lines = contentText.split('\n');
+            
+            lines.forEach(line => {
+                if(line.trim() !== "") {
+                    docChildren.push(new Paragraph({ 
+                        text: line, 
+                        spacing: { after: 100 } 
+                    }));
+                }
+            });
         });
     }
 

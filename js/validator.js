@@ -60,7 +60,8 @@ async function generateKHBD() {
             grade: document.getElementById('sel-grade').value,
             book: document.getElementById('sel-book').value,
             lessonName: document.getElementById('lesson-name').value,
-            condition: document.getElementById('sel-condition').value
+            condition: document.getElementById('sel-condition').value,
+            duration: document.getElementById('lesson-duration').value // bắt thời lượng
         };
         
         // 1. Retrieval (Tìm kiếm tài liệu)
@@ -97,7 +98,8 @@ async function autoFix() {
             grade: document.getElementById('sel-grade').value,
             book: document.getElementById('sel-book').value,
             lessonName: document.getElementById('lesson-name').value,
-            condition: document.getElementById('sel-condition').value
+            condition: document.getElementById('sel-condition').value,
+            duration: document.getElementById('lesson-duration').value // bắt thời lượng
         };
         
         const errors = validateKHBD(currentKHBD);
