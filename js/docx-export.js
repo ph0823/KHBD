@@ -134,10 +134,11 @@ async function exportWord() {
                         new Paragraph({ children: [new TextRun({ text: "b) Nội dung: ", bold: true }), new TextRun({ text: act.content })] }),
                         new Paragraph({ children: [new TextRun({ text: "c) Sản phẩm: ", bold: true }), new TextRun({ text: act.products })] }),
                         new Paragraph({ children: [new TextRun({ text: "d) Tổ chức thực hiện:", bold: true })] }),
-                        new Paragraph({ text: `- Bước 1 (Chuyển giao): ${act.organization.transfer}`, indent: { left: 720 } }),
-                        new Paragraph({ text: `- Bước 2 (Thực hiện): ${act.organization.execute}`, indent: { left: 720 } }),
-                        new Paragraph({ text: `- Bước 3 (Báo cáo): ${act.organization.report}`, indent: { left: 720 } }),
-                        new Paragraph({ text: `- Bước 4 (Kết luận): ${act.organization.conclude}`, indent: { left: 720 }, spacing: { after: 200 } })
+                        // AI sẽ tự sinh ra "Bước 1:...", nên chỉ cần gắn nội dung vào Word
+                        new Paragraph({ text: `- ${act.organization.transfer}`, indent: { left: 720 } }),
+                        new Paragraph({ text: `- ${act.organization.execute}`, indent: { left: 720 } }),
+                        new Paragraph({ text: `- ${act.organization.report}`, indent: { left: 720 } }),
+                        new Paragraph({ text: `- ${act.organization.conclude}`, indent: { left: 720 }, spacing: { after: 200 } })
                     );
                 });
             }

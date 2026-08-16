@@ -69,12 +69,13 @@ Tuyệt đối không được gộp các tiết với nhau, không được b�
    - Sản phẩm
    - Tổ chức thực hiện
 
-9. Trong "Tổ chức thực hiện" phải thể hiện:
-   - Chuyển giao nhiệm vụ
-   - Thực hiện nhiệm vụ
-   - Báo cáo/thảo luận
-   - Kết luận/nhận định
-    Trình bày ngắn gọn lần lượt là: Bước 1, Bước 2, Bước 3, Bước 4. 
+9. Trong "Tổ chức thực hiện" phải trình bày chi tiết bằng 4 bước.
+   Khi tạo JSON, nội dung của mỗi phần tử phải bắt đầu bằng:
+   - transfer: "Bước 1: " + [Nội dung]
+   - execute: "Bước 2: " + [Nội dung]
+   - report: "Bước 3: " + [Nội dung]
+   - conclude: "Bước 4: " + [Nội dung]
+   Tuyệt đối KHÔNG ĐƯỢC viết các từ "Chuyển giao", "Thực hiện", "Báo cáo", "Kết luận" vào nội dung. 
 
 10. Nội dung phải phù hợp học sinh THCS.
 
@@ -92,7 +93,7 @@ Tuyệt đối không được gộp các tiết với nhau, không được b�
     nếu không mô tả nhiệm vụ cụ thể.
 
 15. Năng lực Tin học và năng lực số phải gắn với hoạt động
-    thực tế của học sinh, không liệt kê cho có.
+    thực tế của học sinh, không liệt kê cho có, ghi chú rõ trong mỗi hoạt động nếu có tích hợp các năng lực này.
 
 16. Phẩm chất phải phù hợp với nhiệm vụ học tập.
 
@@ -116,7 +117,6 @@ Tuyệt đối không được gộp các tiết với nhau, không được b�
       + Nếu là Lớp 8 hoặc Lớp 9: Mã bắt buộc phải chứa cụm "TC2" (Ví dụ: 1.1.TC2a, 1.2.TC2b).
     - Mã Năng lực AI: Bắt buộc phải viết hoa chữ cái đầu (A, B, C, D) đi kèm số chủ đề và số thứ tự chỉ báo. Định dạng chuẩn phải giống như "A1.1", "B2.1", "C4.1". Tuyệt đối không tự bịa các mã nằm ngoài định dạng này
     - Các mã này phải được điền chính xác vào thuộc tính "code" trong cấu trúc JSON.
-// Thêm quy tắc này vào ngay dưới quy tắc số 23 trong SYSTEM_PROMPT
 
 24. PHÂN BỔ TIẾT HỌC (BẮT BUỘC): 
     - Chú ý kỹ "Thời gian thực hiện" (số tiết) của bài học được cung cấp.
@@ -945,11 +945,9 @@ function buildUserPrompt(
 THÔNG TIN YÊU CẦU
 ============================================================
 
-Môn học:
-Tin học
+Môn học: Tin học
 
-Lớp:
-${grade}
+Lớp: ${grade}
 
 Bộ sách:
 ${book}
@@ -1032,13 +1030,13 @@ Mỗi hoạt động phải có:
 3. Sản phẩm
 4. Tổ chức thực hiện
 
-Trong tổ chức thực hiện phải thể hiện rõ:
-
-- Chuyển giao nhiệm vụ
-- Thực hiện nhiệm vụ
-- Báo cáo/thảo luận
-- Kết luận/nhận định
-
+Trong tổ chức thực hiện, chỉ trình bày nội dung của 4 bước 
+- Bước 1:
+- Bước 2:
+- Bước 3:
+- Bước 4:
+(vào các biến tương ứng transfer, execute, report, conclude). 
+Tuyệt đối KHÔNG viết các từ: "Chuyển giao", "Thực hiện", "Báo cáo", "Kết luận".
 
 ============================================================
 YÊU CẦU VỀ NĂNG LỰC

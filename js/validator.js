@@ -47,6 +47,12 @@ function stopTimer() {
 async function generateKHBD() {
     document.getElementById('loading').style.display = 'block';
     document.getElementById('validation-box').style.display = 'none';
+    
+    // 1. Khóa nút bấm để ngăn click nhiều lần
+    const btnGen = document.getElementById('btn-generate');
+    btnGen.disabled = true;
+    btnGen.innerText = "⏳ Đang xử lý...";
+    
     startTimer(); // Bắt đầu đếm giờ
     
     try {
@@ -72,6 +78,10 @@ async function generateKHBD() {
     } finally {
         stopTimer(); // Dừng đếm giờ dù thành công hay thất bại
         document.getElementById('loading').style.display = 'none';
+        
+        // 2. Mở khóa nút bấm sau khi hoàn tất
+        btnGen.disabled = false;
+        btnGen.innerText = "🤖 Phân tích & Tạo KHBD";
     }
 }
 
@@ -162,7 +172,7 @@ function renderPreview(json) {
     }
 
     try {
-        let html = `<h2 style="text-align: center; color: var(--primary-color);">KẾ HOẠCH BÀI DẠY: ${(json.lesson?.title || "Chưa có tên bài").toUpperCase()}</h2>`;
+        let html = `<h2 style="text-align: center; color: var(--primary-color);">${(json.lesson?.title || "Chưa có tên bài").toUpperCase()}</h2>`;
         html += `<p style="text-align: center; font-style: italic;">Thời gian thực hiện: ${json.lesson?.duration || "2 tiết"}</p>`;
         
         // I. MỤC TIÊU
@@ -177,7 +187,7 @@ function renderPreview(json) {
         html += `</ul><p><em>b. Năng lực Tin học:</em></p><ul>`;
         (json.objectives?.informaticsCompetencies || []).forEach(c => html += `<li>${c}</li>`);
         html += `</ul>`;
-        // c. Năng lực số (Trích xuất dạng tóm tắt)
+        // c. Năng lực số 
         if (json.objectives?.digitalCompetencies && json.objectives.digitalCompetencies.length > 0) {
             html += `<p><em>c. Năng lực số:</em></p><ul>`;
             json.objectives.digitalCompetencies.forEach(dc => {
@@ -186,7 +196,7 @@ function renderPreview(json) {
             html += `</ul>`;
         }
         
-        // d. Năng lực AI (Trích xuất dạng tóm tắt)
+        // d. Năng lực AI 
         if (json.objectives?.aiCompetencies && json.objectives.aiCompetencies.length > 0) {
             html += `<p><em>d. Năng lực AI:</em></p><ul>`;
             json.objectives.aiCompetencies.forEach(ai => {
@@ -246,10 +256,10 @@ function renderPreview(json) {
                 html += `<p><strong>b) Nội dung:</strong> ${act?.content || ""}</p>`;
                 html += `<p><strong>c) Sản phẩm:</strong> ${act?.products || ""}</p>`;
                 html += `<p><strong>d) Tổ chức thực hiện:</strong></p><ul>`;
-                html += `<li><strong>Chuyển giao:</strong> ${act?.organization?.transfer || ""}</li>`;
-                html += `<li><strong>Thực hiện:</strong> ${act?.organization?.execute || ""}</li>`;
-                html += `<li><strong>Báo cáo:</strong> ${act?.organization?.report || ""}</li>`;
-                html += `<li><strong>Kết luận:</strong> ${act?.organization?.conclude || ""}</li>`;
+                html += `<li>- ${act?.organization?.transfer || ""}</li>`;
+                html += `<li>- ${act?.organization?.execute || ""}</li>`;
+                html += `<li>- ${act?.organization?.report || ""}</li>`;
+                html += `<li>- ${act?.organization?.conclude || ""}</li>`;
                 html += `</ul>`;
             });
         });
