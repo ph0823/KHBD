@@ -258,6 +258,11 @@ function renderPreview(json) {
             
             // Lặp qua các hoạt động bên trong tiết học đó
             (period.activities || []).forEach((act, index) => {
+                // Tự động chèn tiêu đề Hoạt động 2 nếu phát hiện Hoạt động 2.1
+                if (act?.name && act.name.includes("2.1")) {
+                    html += `<h4 style="color: var(--primary-color); margin-top: 15px;">Hoạt động 2: Hình thành kiến thức mới</h4>`;
+                }
+
                 html += `<h4 style="color: var(--primary-color); margin-top: 15px;">${act?.name || "Chưa có tên"}</h4>`;
                 html += `<p><strong>a) Mục tiêu:</strong> ${(act?.objectives || []).join("; ")}</p>`;
                 html += `<p><strong>b) Nội dung:</strong> ${act?.content || ""}</p>`;

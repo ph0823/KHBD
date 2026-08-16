@@ -137,6 +137,16 @@ async function exportWord() {
             // Duyệt qua các hoạt động trong tiết
             if (period.activities) {
                 period.activities.forEach((act, index) => {
+                    // Chèn Paragraph tiêu đề Hoạt động 2 vào Word
+                    if (act.name && act.name.includes("2.1")) {
+                        docChildren.push(
+                            new Paragraph({ 
+                                children: [new TextRun({ text: "Hoạt động 2: Hình thành kiến thức mới", bold: true })], 
+                                spacing: { before: 200, after: 100 } 
+                            })
+                        );
+                    }
+                    
                     docChildren.push(
                         // 3. In đậm tên Hoạt động
                         new Paragraph({ 
