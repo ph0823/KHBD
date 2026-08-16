@@ -88,7 +88,7 @@ nav button:hover, nav button.active {
    MAIN CONTENT & SECTIONS
    ========================================= */
 main {
-    max-width: 1200px; /* Tối ưu chiều ngang cho màn hình máy tính */
+    max-width: 1200px;
     margin: 1rem auto;
     padding: 0 1rem;
 }
@@ -102,27 +102,23 @@ section {
 }
 
 /* =========================================
-   LAYOUT LƯỚI (GRID) CHO TẠO KHBD
+   LAYOUT LƯỚI (GRID) THÔNG MINH CHO FORM
    ========================================= */
-#sec-create {
+.form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Chia form thành 2 cột đều nhau */
+    /* Tự động chia cột: mỗi cột rộng tối thiểu 300px, tối đa 1 phần đều nhau */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-/* Ép các phần tử này trải dài toàn bộ 2 cột */
-#sec-create h2,
-#btn-generate,
-#loading,
-#validation-box,
-#preview-box {
-    grid-column: 1 / -1; 
+.form-grid .form-group {
+    margin-bottom: 0; /* Xóa margin thừa vì đã có gap của Grid */
 }
 
-.form-group {
-    margin-bottom: 0; /* Bỏ margin thừa vì đã dùng gap trong Grid */
-}
-
+/* =========================================
+   FORMS & INPUTS
+   ========================================= */
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
@@ -263,7 +259,7 @@ button[onclick="saveConfig()"]:hover, #btn-generate:hover {
 }
 
 #preview-box {
-    max-height: calc(100vh - 250px); /* Tự động co giãn theo chiều cao trình duyệt */
+    max-height: calc(100vh - 250px);
     overflow-y: auto; 
     background-color: #fff; 
     color: #000;
@@ -274,7 +270,7 @@ button[onclick="saveConfig()"]:hover, #btn-generate:hover {
 }
 
 /* =========================================
-   RESPONSIVE (Tự động xếp lại trên Điện thoại)
+   RESPONSIVE CHO MENU TRÊN ĐIỆN THOẠI
    ========================================= */
 @media (max-width: 640px) {
     header {
@@ -287,10 +283,5 @@ button[onclick="saveConfig()"]:hover, #btn-generate:hover {
         width: 100%;
         justify-content: center;
         flex-wrap: wrap;
-    }
-    
-    /* Trên điện thoại nhỏ, hủy 2 cột và đưa form về lại 1 cột dọc */
-    #sec-create {
-        grid-template-columns: 1fr;
     }
 }
