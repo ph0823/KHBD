@@ -50,7 +50,11 @@
                 </div>
                 <div class="form-group">
                     <label>Bộ sách:</label>
-                    <select id="sel-book"><option>Kết nối tri thức</option><option>Cánh Diều</option><option>Chân trời sáng tạo</option></select>
+                    <select id="sel-book">
+                        <option>Kết nối tri thức</option>
+                        <option>Cánh Diều</option>
+                        <option>Chân trời sáng tạo</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Tên bài dạy:</label>
@@ -64,10 +68,13 @@
                     </select>
                 </div>
                 
-                <!-- THÊM MỚI: Ô nhập thời lượng dạy -->
+                <!-- Ô chọn thời lượng dạy -->
                 <div class="form-group">
                     <label>Thời lượng dạy:</label>
-                    <input type="text" id="lesson-duration" value="2 tiết" placeholder="Ví dụ: 1 tiết, 2 tiết, 3 tiết">
+                    <select id="lesson-duration">
+                        <option value="1 tiết">1 tiết</option>
+                        <option value="2 tiết" selected>2 tiết</option>                        
+                    </select>
                 </div>
             </div>
             <!-- KẾT THÚC VÙNG LƯỚI -->            
