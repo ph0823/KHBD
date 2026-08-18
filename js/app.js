@@ -86,21 +86,50 @@ function updateLessonOptions() {
 // ==========================================
 // ĐIỀU HƯỚNG GIAO DIỆN (TABS)
 // ==========================================
+
 function showSection(sectionId) {
+    // 1. Ẩn tất cả các màn hình
     document.getElementById('sec-config').style.display = 'none';
     document.getElementById('sec-create').style.display = 'none';
+    document.getElementById('sec-docs').style.display = 'none'; // Thêm màn hình kho tài liệu
     
+    // 2. Bỏ highlight ở tất cả nút nav
     const navButtons = document.querySelectorAll('nav button');
     navButtons.forEach(btn => btn.classList.remove('active'));
 
-    document.getElementById(sectionId).style.display = 'block';
+    // 3. Hiển thị màn hình được chọn
+    const targetSec = document.getElementById(sectionId);
+    if (targetSec) targetSec.style.display = 'block';
 
+    // 4. Highlight nút nav tương ứng
     if (sectionId === 'sec-config') {
         document.getElementById('nav-config').classList.add('active');
     } else if (sectionId === 'sec-create') {
         document.getElementById('nav-create').classList.add('active');
+    } else if (sectionId === 'sec-docs') {
+        document.getElementById('nav-docs').classList.add('active');
+        // Khi mở kho tài liệu, tự động hiển thị danh sách các file đã lưu
+        if (typeof renderDocList === 'function') renderDocList();
     }
 }
+
+// Gắn sự kiện click cho nút nav Kho tài liệu
+document.getElementById('nav-docs').addEventListener('click', () => showSection('sec-docs'));
+
+// Sự kiện khi người dùng chọn file từ máy tính
+document.getElementById('file-input').addEventListener('change', function(e) {
+    const files = e.target.files;
+    const infoText = document.getElementById('selected-files-text');
+    const btnProcess = document.getElementById('btn-process-file');
+    
+    if (files.length > 0) {
+        infoText.innerText = `Đã chọn ${files.length} file: ` + Array.from(files).map(f => f.name).join(', ');
+        btnProcess.style.display = 'inline-block';
+    } else {
+        infoText.innerText = 'Chưa chọn file nào';
+        btnProcess.style.display = 'none';
+    }
+});
 
 // Gắn sự kiện chuyển tab
 document.getElementById('nav-config').addEventListener('click', () => showSection('sec-config'));
