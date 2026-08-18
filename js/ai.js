@@ -125,6 +125,15 @@ NGUYÊN TẮC BẮT BUỘC
    - Nếu bài học có nhiều tiết, AI phải phân bổ các hoạt động của 4 phần trên vào các tiết sao cho hợp lý logic.
    - Ví dụ (Bài 2 tiết): Tiết 1 có thể gồm Khởi động và một số hoạt động của Hình thành kiến thức mới. Tiết 2 sẽ tiếp tục phần Hình thành kiến thức mới (nếu còn), sau đó đến Luyện tập và Vận dụng. Không lặp lại hoạt động Khởi động ở Tiết 2.
 
+25. QUY TẮC TRÍCH DẪN HÌNH ẢNH, SƠ ĐỒ SGK:
+    - TUYỆT ĐỐI KHÔNG viết các câu chung chung như: "sơ đồ khối trong SGK mục 2", "hình ảnh trong SGK", "quan sát hình trong sách".
+    - Khi nhắc đến bất kỳ hình ảnh, sơ đồ, bảng biểu nào, BẮT BUỘC phải ghi rõ:
+      + Tên/Mã hình (Ví dụ: Hình 1.2, Hình 1.5, Sơ đồ 2.1)
+      + Tên chi tiết của hình
+      + Số trang cụ thể trong SGK (nếu có thông tin từ Context hoặc dựa theo chuẩn bộ sách).
+    - Định dạng chuẩn bắt buộc dùng trong văn bản:
+      "Hình [Số] - [Tên hình/sơ đồ] (Trang [Số trang], SGK"
+    - Ví dụ chuẩn: "Hình 1.2. Thiết bị vào - ra (Trang 7, SGK)"
 `;
 
 
@@ -1069,6 +1078,12 @@ YÊU CẦU ĐÁNH GIÁ
 - tự đánh giá;
 - đánh giá đồng đẳng.
 
+============================================================
+YÊU CẦU VỀ HÌNH ẢNH VÀ SƠ ĐỒ SGK
+============================================================
+Trong phần "Nội dung" (content) và "Tổ chức thực hiện" (organization) của mỗi hoạt động:
+- Mọi sơ đồ, hình ảnh minh họa BẮT BUỘC phải trích dẫn chính xác mã hình và số trang SGK.
+- Ví dụ: Thay vì viết "Học sinh quan sát sơ đồ mục 2", BẮT BUỘC viết "Học sinh nghiên cứu Sơ đồ khối mối quan hệ giữa các bộ phận - Hình 1.2 (Trang 7, SGK)".
 
 ============================================================
 YÊU CẦU CUỐI CÙNG
