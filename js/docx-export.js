@@ -201,6 +201,33 @@ async function exportWord() {
     });
 
     Packer.toBlob(doc).then(blob => {
-        saveAs(blob, `KHBD_TinHoc_${currentKHBD.lesson.title}.docx`);
+        // Tự động tạo tên file chuẩn có dạng: KHBD_Tin 7_Bai1 Thiet Bi Vao Ra.docx
+        const fileName = getStandardFileName(currentKHBD.lesson);
+        saveAs(blob, fileName);
     });
+}
+
+// Hàm xử lý loại bỏ dấu tiếng Việt và chuẩn hóa tên file xuất
+function getStandardFileName(lesson) {
+    // 1. Trích xuất số lớp (Ví dụ: "7", "Lớp 7" -> "7")
+    const gradeNum = (lesson.grade || "7").replace(/[^0-9]/g, '') || "7";
+    
+    // 2. Bỏ dấu tiếng Việt và các ký tự đặc biệt (dấu hai chấm, gạch ngang...)
+    let cleanTitle = (lesson.title || "Bai Hoc")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d").replace(/Đ/g, "D")
+        .replace(/[^a-zA-Z0-9\s]/g, " ") // Thay thế ký tự đặc biệt bằng khoảng trắng
+        .trim();
+
+    // 3. Viết hoa chữ cái đầu mỗi từ và xóa khoảng trắng thừa
+    cleanTitle = cleanTitle
+        .split(/\s+/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ");
+
+    // 4. Viết liền dạng "Bai 1" -> "Bai1"
+    cleanTitle = cleanTitle.replace(/Bai\s+(\d+)/i, "Bai$1");
+
+    return `KHBD_Tin ${gradeNum}_${cleanTitle}.docx`;
 }
