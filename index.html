@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <!-- Tạo lần đầu lúc 10h ngày 10-08-2026, Cập nhật giao diện Grid 16-08-->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Tin THCS 2026</title>
+    <!-- Tạo lần đầu lúc 10h ngày 10-08-2026, Cập nhật giao diện Grid 16-08-->
+    <title>AI Tạo KHBD Tin</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <!-- Libraries -->
+    
+    <!-- Các thư viện hỗ trợ (JS Libraries) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.9/lunr.min.js"></script>
@@ -17,7 +18,7 @@
 </head>
 <body>
     <header>
-        <h1>AI KHBD Tin Học THCS (Công văn 5512)</h1>
+        <h1>AI Tin THCS</h1>
         <nav>
             <button id="nav-config">Cài đặt API</button>
             <button id="nav-docs">Kho Tài liệu</button>
@@ -26,52 +27,66 @@
     </header>
 
     <main id="app-content">
-        <!-- Cài đặt API -->
+        <!-- Màn hình 1: Cấu hình API -->
         <section id="sec-config">
             <h2>Cấu hình AI</h2>
-            <p class="warning">Lưu ý: API Key lưu tại trình duyệt (Client-side). Không dùng trên máy công cộng!</p>
-            <input type="password" id="api-key" placeholder="Nhập OpenAI / OpenRouter API Key">
+            <p class="warning">Lưu ý: API Key được lưu tại trình duyệt cá nhân (Client-side). Không dùng trên máy tính công cộng!</p>
+            <input type="password" id="api-key" placeholder="Nhập Gemini / OpenAI / OpenRouter API Key">
             <select id="api-provider">
                 <option value="gemini">Google Gemini</option>
                 <option value="openai">OpenAI (GPT-4o)</option>
-                <option value="openrouter">OpenRouter (Hỗ trợ nhiều model, tốt cho Web)</option>
+                <option value="openrouter">OpenRouter (Nhiều model Web)</option>
             </select>
             <button onclick="saveConfig()">Lưu Cấu hình</button>
         </section>
 
-        <!-- Tạo KHBD -->
+        <!-- Màn hình 2: Tạo KHBD -->
         <section id="sec-create" style="display:none;">
             <h2>Tạo Kế hoạch bài dạy</h2>
             
             <!-- VÙNG LƯỚI (GRID) CHỨA CÁC Ô NHẬP LIỆU -->          
             <div class="form-grid">
+                <!-- Chọn Lớp -->
                 <div class="form-group">
-                    <label>Lớp:</label>
-                    <select id="sel-grade"><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select>
+                    <label for="sel-grade">Lớp:</label>
+                    <select id="sel-grade">
+                        <option value="6">6</option>
+                        <option value="7" selected>7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
                 </div>
+
+                <!-- Chọn Bộ sách (Mặc định Kết nối tri thức) -->
                 <div class="form-group">
-                    <label>Bộ sách:</label>
+                    <label for="sel-book">Bộ sách:</label>
                     <select id="sel-book">
-                        <option>Kết nối tri thức</option>
+                        <option selected>Kết nối tri thức</option>
                         <option>Cánh Diều</option>
                         <option>Chân trời sáng tạo</option>
                     </select>
                 </div>
+
+                <!-- Chọn Tên bài dạy (Đổ dữ liệu động theo Lớp) -->
                 <div class="form-group">
-                    <label>Tên bài dạy:</label>
-                    <input type="text" id="lesson-name" placeholder="Ví dụ: Bài 5 Định dạng số tiền và ngày tháng">
+                    <label for="lesson-name">Tên bài dạy:</label>
+                    <select id="lesson-name">
+                        <!-- Các <option> bài học sẽ được nạp tự động bởi hàm updateLessonOptions() trong app.js -->
+                    </select>
                 </div>
+
+                <!-- Điều kiện lớp học -->
                 <div class="form-group">
-                    <label>Điều kiện lớp học:</label>
+                    <label for="sel-condition">Điều kiện lớp học:</label>
                     <select id="sel-condition">
                         <option>Phòng máy (có Internet)</option>
                         <option>Phòng học thông thường + máy chiếu</option>
                     </select>
                 </div>
                 
-                <!-- Ô chọn thời lượng dạy -->
+                <!-- Thời lượng dạy -->
                 <div class="form-group">
-                    <label>Thời lượng dạy:</label>
+                    <label for="lesson-duration">Thời lượng dạy:</label>
                     <select id="lesson-duration">
                         <option value="1 tiết">1 tiết</option>
                         <option value="2 tiết" selected>2 tiết</option>                        
@@ -82,6 +97,7 @@
 
             <button id="btn-generate" onclick="generateKHBD()">🤖 Phân tích & Tạo KHBD</button>
             
+            <!-- Trạng thái Loading -->
             <div id="loading" style="display:none; text-align: center;">
                 🤖 AI đang làm việc (Tìm kiếm tài liệu -> Suy luận -> Tạo form -> Kiểm tra)...<br>
                 <span style="font-size: 1.1em; color: var(--danger-color); font-weight: bold; margin-top: 10px; display: inline-block;">
@@ -89,14 +105,14 @@
                 </span>
             </div>
             
-            <!-- Vùng hiển thị lỗi/Validate và Xem trước -->
+            <!-- Vùng hiển thị kiểm tra chất lượng và bản xem trước -->
             <div id="validation-box" style="display:none;">
                 <h3>Kiểm tra chất lượng</h3>
                 <ul id="validation-list"></ul>
                 <button id="btn-fix" onclick="autoFix()">Tự động sửa lỗi</button>
                 
                 <div id="preview-box" style="display:none;">
-                    <!-- Nội dung KHBD sẽ được render vào đây -->
+                    <!-- Nội dung KHBD sẽ được hiển thị tại đây -->
                 </div>
 
                 <button id="btn-export" onclick="exportWord()" style="display:none;">⬇️ Xuất File Word (.docx)</button>
@@ -104,6 +120,8 @@
 
         </section>
     </main>
+
+    <!-- Các tệp JavaScript của ứng dụng -->
     <script src="js/rag.js"></script>
     <script src="js/ai.js"></script>
     <script src="js/validator.js"></script>
