@@ -1,16 +1,28 @@
 // Biên dịch JSON thành File Word chuẩn 5512 và Form mẫu
 
+
+// Đã cập nhật Cỡ chữ 12pt & In đậm tiêu đề Phụ lục
+// ============================================================
+
 async function exportWord() {
     if (!currentKHBD) return;
 
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } = docx;
 
-    // Hàm hỗ trợ tạo ô trong bảng (Cell)
+    // Font size chuẩn: 12pt = 24 (half-points trong docx JS)
+    const FONT_NAME = "Times New Roman";
+    const FONT_SIZE_BODY = 24; // 12pt
+    const FONT_SIZE_TITLE = 30; // 15pt
+
+    // Hàm hỗ trợ tạo ô trong Bảng với cỡ chữ 12pt
     const createCell = (text, isBold = false) => {
         return new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: text, bold: isBold })] })],
+            children: [new Paragraph({
+                children: [new TextRun({ text: String(text || ""), bold: isBold, size: FONT_SIZE_BODY, font: FONT_NAME })],
+                spacing: { before: 60, after: 60, line: 276 }
+            })],
             width: { size: 100, type: WidthType.AUTO },
-            margins: { top: 100, bottom: 100, left: 100, right: 100 }
+            margins: { top: 100, bottom: 100, left: 120, right: 120 }
         });
     };
 
@@ -18,190 +30,161 @@ async function exportWord() {
         // Tiêu đề bài học
         new Paragraph({
             children: [
-                new TextRun({ text: `CHỦ ĐỀ/BÀI: ${currentKHBD.lesson.title.toUpperCase()}`, bold: true, size: 28 })
+                new TextRun({ text: `CHỦ ĐỀ/BÀI: ${currentKHBD.lesson.title.toUpperCase()}`, bold: true, size: FONT_SIZE_TITLE, font: FONT_NAME })
             ],
             alignment: docx.AlignmentType.CENTER,
-            spacing: { after: 200 }
+            spacing: { after: 150 }
         }),
         new Paragraph({
-            text: `Thời gian thực hiện: ${currentKHBD.lesson.duration || "2 tiết"}`,
+            children: [
+                new TextRun({ text: `Thời gian thực hiện: ${currentKHBD.lesson.duration || "2 tiết"}`, italics: true, size: FONT_SIZE_BODY, font: FONT_NAME })
+            ],
             alignment: docx.AlignmentType.CENTER,
-            spacing: { after: 400 }
+            spacing: { after: 300 }
         }),
 
         // I. MỤC TIÊU
-        new Paragraph({ text: "I. MỤC TIÊU", heading: HeadingLevel.HEADING_2, bold: true }),
+        new Paragraph({ children: [new TextRun({ text: "I. MỤC TIÊU", bold: true, size: 26, font: FONT_NAME })], spacing: { before: 200, after: 100 } }),
         
-        // 1. In đậm các mục Kiến thức, Năng lực, Phẩm chất
-        new Paragraph({ children: [new TextRun({ text: "1. Kiến thức:", bold: true })], spacing: { before: 100 } }),
-        ...currentKHBD.objectives.knowledge.map(k => new Paragraph({ text: `- ${k}` })),
+        new Paragraph({ children: [new TextRun({ text: "1. Kiến thức:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], spacing: { before: 80 } }),
+        ...(currentKHBD.objectives.knowledge || []).map(k => new Paragraph({ children: [new TextRun({ text: `- ${k}`, size: FONT_SIZE_BODY, font: FONT_NAME })] })),
         
-        new Paragraph({ children: [new TextRun({ text: "2. Năng lực:", bold: true })], spacing: { before: 100 } }),
+        new Paragraph({ children: [new TextRun({ text: "2. Năng lực:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], spacing: { before: 120 } }),
         
-        new Paragraph({ children: [new TextRun({ text: "a. Năng lực chung:", bold: true })] }), // Đổi italics thành bold
-        ...currentKHBD.objectives.generalCompetencies.map(c => new Paragraph({ text: `- ${c}` })),
+        new Paragraph({ children: [new TextRun({ text: "a) Năng lực chung:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })] }),
+        ...(currentKHBD.objectives.generalCompetencies || []).map(c => new Paragraph({ children: [new TextRun({ text: `- ${c}`, size: FONT_SIZE_BODY, font: FONT_NAME })] })),
         
-        new Paragraph({ children: [new TextRun({ text: "b. Năng lực Tin học:", bold: true })] }), // Đổi italics thành bold
-        ...currentKHBD.objectives.informaticsCompetencies.map(c => new Paragraph({ text: `- ${c}` })),
+        new Paragraph({ children: [new TextRun({ text: "b) Năng lực Tin học:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })] }),
+        ...(currentKHBD.objectives.informaticsCompetencies || []).map(c => new Paragraph({ children: [new TextRun({ text: `- ${c}`, size: FONT_SIZE_BODY, font: FONT_NAME })] })),
         
         ...(currentKHBD.objectives.digitalCompetencies?.length > 0 ? [
-            new Paragraph({ children: [new TextRun({ text: "c. Năng lực số:", bold: true })] }), // Đổi italics thành bold
-            ...currentKHBD.objectives.digitalCompetencies.map(dc => new Paragraph({ text: `- ${dc.code || ""}: ${dc.expression || ""}` }))
+            new Paragraph({ children: [new TextRun({ text: "c) Năng lực số:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })] }),
+            ...currentKHBD.objectives.digitalCompetencies.map(dc => new Paragraph({ children: [new TextRun({ text: `- ${dc.code || ""}: ${dc.expression || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })] }))
         ] : []),
         
         ...(currentKHBD.objectives.aiCompetencies?.length > 0 ? [
-            new Paragraph({ children: [new TextRun({ text: "d. Năng lực AI:", bold: true })] }), // Đổi italics thành bold
-            ...currentKHBD.objectives.aiCompetencies.map(ai => new Paragraph({ text: `- ${ai.code || ""}: ${ai.expression || ""}` }))
+            new Paragraph({ children: [new TextRun({ text: "d) Năng lực AI:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })] }),
+            ...currentKHBD.objectives.aiCompetencies.map(ai => new Paragraph({ children: [new TextRun({ text: `- ${ai.code || ""}: ${ai.expression || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })] }))
         ] : []),
 
-        new Paragraph({ children: [new TextRun({ text: "3. Phẩm chất:", bold: true })], spacing: { before: 100 } }),
-        ...currentKHBD.objectives.qualities.map(q => new Paragraph({ text: `- ${q}` }))
+        new Paragraph({ children: [new TextRun({ text: "3. Phẩm chất:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], spacing: { before: 120 } }),
+        ...(currentKHBD.objectives.qualities || []).map(q => new Paragraph({ children: [new TextRun({ text: `- ${q}`, size: FONT_SIZE_BODY, font: FONT_NAME })] }))
     ];
 
     // Bảng Định hướng Năng lực số 
-    if (currentKHBD.objectives.digitalCompetencies && currentKHBD.objectives.digitalCompetencies.length > 0) {
-        docChildren.push(new Paragraph({ text: "4. Định hướng năng lực số:", bold: true, spacing: { before: 200, after: 100 } }));
-        const digitalTable = new Table({
+    if (currentKHBD.objectives.digitalCompetencies?.length > 0) {
+        docChildren.push(new Paragraph({ children: [new TextRun({ text: "4. Định hướng năng lực số:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], spacing: { before: 200, after: 100 } }));
+        docChildren.push(new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
-                new TableRow({
-                    children: [
-                        createCell("Mã", true), createCell("Biểu hiện cụ thể", true), 
-                        createCell("Hoạt động", true), createCell("Sản phẩm", true), createCell("Đánh giá", true)
-                    ]
-                }),
+                new TableRow({ children: [createCell("Mã", true), createCell("Biểu hiện cụ thể", true), createCell("Hoạt động", true), createCell("Sản phẩm", true), createCell("Đánh giá", true)] }),
                 ...currentKHBD.objectives.digitalCompetencies.map(dc => new TableRow({
-                    children: [
-                        createCell(dc.code || ""), createCell(dc.expression || ""), 
-                        createCell(dc.activity || ""), createCell(dc.product || ""), createCell(dc.assessment || "")
-                    ]
+                    children: [createCell(dc.code), createCell(dc.expression), createCell(dc.activity), createCell(dc.product), createCell(dc.assessment)]
                 }))
             ]
-        });
-        docChildren.push(digitalTable);
+        }));
     }
 
-    // Bảng Năng lực AI tích hợp
-    if (currentKHBD.objectives.aiCompetencies && currentKHBD.objectives.aiCompetencies.length > 0) {
-        docChildren.push(new Paragraph({ text: "5. Năng lực AI tích hợp (Quyết định 3439/QĐ-BGDĐT):", bold: true, spacing: { before: 200, after: 100 } }));
-        const aiTable = new Table({
+    // Bảng Năng lực AI
+    if (currentKHBD.objectives.aiCompetencies?.length > 0) {
+        docChildren.push(new Paragraph({ children: [new TextRun({ text: "5. Năng lực AI tích hợp (Quyết định 3439/QĐ-BGDĐT):", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], spacing: { before: 200, after: 100 } }));
+        docChildren.push(new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
-                new TableRow({
-                    children: [
-                        createCell("Mã chỉ báo", true), createCell("Biểu hiện cụ thể của học sinh", true), 
-                        createCell("Hoạt động hình thành", true), createCell("Sản phẩm minh chứng", true), createCell("Công cụ và cách đánh giá", true)
-                    ]
-                }),
+                new TableRow({ children: [createCell("Mã chỉ báo", true), createCell("Biểu hiện cụ thể", true), createCell("Hoạt động hình thành", true), createCell("Sản phẩm minh chứng", true), createCell("Đánh giá", true)] }),
                 ...currentKHBD.objectives.aiCompetencies.map(ai => new TableRow({
-                    children: [
-                        createCell(ai.code || ""), createCell(ai.expression || ""), 
-                        createCell(ai.activity || ""), createCell(ai.product || ""), createCell(ai.assessment || "")
-                    ]
+                    children: [createCell(ai.code), createCell(ai.expression), createCell(ai.activity), createCell(ai.product), createCell(ai.assessment)]
                 }))
             ]
-        });
-        docChildren.push(aiTable);
+        }));
     }
 
-    // II. THIẾT BỊ DẠY HỌC
-    docChildren.push(new Paragraph({ text: "II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU", heading: HeadingLevel.HEADING_2, bold: true, spacing: { before: 400, after: 100 } }));
-    if (currentKHBD.equipment && currentKHBD.equipment.length > 0) {
-        const eqTable = new Table({
+    // II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU
+    docChildren.push(new Paragraph({ children: [new TextRun({ text: "II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU", bold: true, size: 26, font: FONT_NAME })], spacing: { before: 300, after: 100 } }));
+    if (currentKHBD.equipment?.length > 0) {
+        docChildren.push(new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
                 new TableRow({ children: [createCell("Đối tượng", true), createCell("Thiết bị, học liệu", true), createCell("Mục đích sử dụng", true)] }),
                 ...currentKHBD.equipment.map(eq => new TableRow({
-                    children: [createCell(eq.target || ""), createCell(eq.items || ""), createCell(eq.purpose || "")]
+                    children: [createCell(eq.target), createCell(eq.items), createCell(eq.purpose)]
                 }))
             ]
-        });
-        docChildren.push(eqTable);
+        }));
     }
 
     // III. TIẾN TRÌNH DẠY HỌC
-    docChildren.push(new Paragraph({ text: "III. TIẾN TRÌNH DẠY HỌC", heading: HeadingLevel.HEADING_2, bold: true, spacing: { before: 400, after: 100 } }));
+    docChildren.push(new Paragraph({ children: [new TextRun({ text: "III. TIẾN TRÌNH DẠY HỌC", bold: true, size: 26, font: FONT_NAME })], spacing: { before: 300, after: 100 } }));
     
     if (currentKHBD.periods) {
         currentKHBD.periods.forEach(period => {
-            // Chỉ thêm Paragraph cho Tên Tiết học nếu bài có nhiều hơn 1 tiết
             if (currentKHBD.periods.length > 1) {
-                docChildren.push(
-                    new Paragraph({ 
-                        children: [new TextRun({ text: period.periodName, bold: true })], 
-                        spacing: { before: 300, after: 100 } 
-                    })
-                );
+                docChildren.push(new Paragraph({ 
+                    children: [new TextRun({ text: period.periodName, bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], 
+                    spacing: { before: 200, after: 100 } 
+                }));
             }
 
-            // Duyệt qua các hoạt động trong tiết
             if (period.activities) {
-                period.activities.forEach((act, index) => {
-                    // Chèn Paragraph tiêu đề Hoạt động 2 vào Word
+                period.activities.forEach((act) => {
                     if (act.name && act.name.includes("2.1")) {
-                        docChildren.push(
-                            new Paragraph({ 
-                                children: [new TextRun({ text: "Hoạt động 2: Hình thành kiến thức mới", bold: true })], 
-                                spacing: { before: 200, after: 100 } 
-                            })
-                        );
+                        docChildren.push(new Paragraph({ 
+                            children: [new TextRun({ text: "Hoạt động 2: Hình thành kiến thức mới", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], 
+                            spacing: { before: 200, after: 100 } 
+                        }));
                     }
                     
                     docChildren.push(
-                        // 3. In đậm tên Hoạt động
-                        new Paragraph({ 
-                            children: [new TextRun({ text: act.name, bold: true })], 
-                            spacing: { before: 200, after: 100 } 
-                        }),
-                        new Paragraph({ children: [new TextRun({ text: "a) Mục tiêu: ", bold: true }), new TextRun({ text: act.objectives.join("; ") })] }),
-                        new Paragraph({ children: [new TextRun({ text: "b) Nội dung: ", bold: true }), new TextRun({ text: act.content })] }),
-                        new Paragraph({ children: [new TextRun({ text: "c) Sản phẩm: ", bold: true }), new TextRun({ text: act.products })] }),
-                        new Paragraph({ children: [new TextRun({ text: "d) Tổ chức thực hiện:", bold: true })] }),
+                        new Paragraph({ children: [new TextRun({ text: act.name, bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], spacing: { before: 150, after: 80 } }),
+                        new Paragraph({ children: [new TextRun({ text: "a) Mục tiêu: ", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME }), new TextRun({ text: (act.objectives || []).join("; "), size: FONT_SIZE_BODY, font: FONT_NAME })] }),
+                        new Paragraph({ children: [new TextRun({ text: "b) Nội dung: ", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME }), new TextRun({ text: act.content || "", size: FONT_SIZE_BODY, font: FONT_NAME })] }),
+                        new Paragraph({ children: [new TextRun({ text: "c) Sản phẩm: ", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME }), new TextRun({ text: act.products || "", size: FONT_SIZE_BODY, font: FONT_NAME })] }),
+                        new Paragraph({ children: [new TextRun({ text: "d) Tổ chức thực hiện:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })] }),
                         
-                        // AI tự sinh ra "Bước 1:...", nên chỉ cần gắn nội dung vào Word
-                        new Paragraph({ text: `- ${act.organization.transfer}`, indent: { left: 720 } }),
-                        new Paragraph({ text: `- ${act.organization.execute}`, indent: { left: 720 } }),
-                        new Paragraph({ text: `- ${act.organization.report}`, indent: { left: 720 } }),
-                        new Paragraph({ text: `- ${act.organization.conclude}`, indent: { left: 720 }, spacing: { after: 200 } })
+                        new Paragraph({ children: [new TextRun({ text: `- ${act.organization?.transfer || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
+                        new Paragraph({ children: [new TextRun({ text: `- ${act.organization?.execute || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
+                        new Paragraph({ children: [new TextRun({ text: `- ${act.organization?.report || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
+                        new Paragraph({ children: [new TextRun({ text: `- ${act.organization?.conclude || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 }, spacing: { after: 150 } })
                     );
                 });
             }
         });
     }
 
-    // PHỤ LỤC (Phiếu học tập)
-    if (currentKHBD.appendix && currentKHBD.appendix.length > 0) {
-        docChildren.push(new Paragraph({ text: "PHỤ LỤC: PHIẾU HỌC TẬP VÀ ĐÁP ÁN", heading: HeadingLevel.HEADING_2, bold: true, pageBreakBefore: true }));
+    // PHỤ LỤC (Xử lý cỡ chữ 12pt, In đậm mục lớn và giữ các dòng chấm)
+    if (currentKHBD.appendix?.length > 0) {
+        docChildren.push(new Paragraph({ 
+            children: [new TextRun({ text: "PHỤ LỤC: PHIẾU HỌC TẬP VÀ ĐÁP ÁN", bold: true, size: 26, font: FONT_NAME })], 
+            pageBreakBefore: true, spacing: { before: 200, after: 150 } 
+        }));
+
         currentKHBD.appendix.forEach(app => {
-            // 4. In đậm tiêu đề phiếu học tập
-            docChildren.push(
-                new Paragraph({ 
-                    children: [new TextRun({ text: app.title, bold: true })], 
-                    spacing: { before: 300, after: 150 } 
-                })
-            );
+            docChildren.push(new Paragraph({ 
+                children: [new TextRun({ text: app.title, bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], 
+                spacing: { before: 200, after: 100 } 
+            }));
             
-            // 5. Xử lý xuống dòng cho nội dung phiếu học tập (chia tách bằng \n)
             let contentText = app.content || "";
             let lines = contentText.split('\n');
             
             lines.forEach(line => {
-                if(line.trim() !== "") {
+                let trimmed = line.trim();
+                if(trimmed !== "") {
+                    // Tự động kiểm tra tiêu đề mục lớn để IN ĐẬM (PHẦN I, PHẦN II, PHẦN III, HƯỚNG DẪN CHẤM...)
+                    let isSectionHeader = /^(PHẦN\s+[I|V|X]+|HƯỚNG\s+DẪN\s+CHẤM|ĐÁP\s+ÁN)/i.test(trimmed);
+
                     docChildren.push(new Paragraph({ 
-                        text: line, 
-                        spacing: { after: 100 } 
+                        children: [new TextRun({ text: trimmed, bold: isSectionHeader, size: FONT_SIZE_BODY, font: FONT_NAME })], 
+                        spacing: { after: 80 } 
                     }));
                 }
             });
         });
     }
 
-    const doc = new Document({
-        sections: [{ properties: {}, children: docChildren }]
-    });
+    const doc = new Document({ sections: [{ children: docChildren }] });
 
     Packer.toBlob(doc).then(blob => {
-        // Tự động tạo tên file chuẩn có dạng: KHBD_Tin 7_Bai1 Thiet Bi Vao Ra.docx
         const fileName = getStandardFileName(currentKHBD.lesson);
         saveAs(blob, fileName);
     });
