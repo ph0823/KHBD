@@ -20,7 +20,7 @@
 </head>
 <body>
     <header>
-        <h1>AI Tin THCS</h1>
+        <h1>AI Tin THCS 8 2026</h1>
         <nav>
             <button id="nav-config">Cài đặt API</button>
             <button id="nav-docs">Kho Tài liệu</button>
@@ -47,9 +47,7 @@
         <section id="sec-create" style="display:none;">
             <h2>Tạo Kế hoạch bài dạy</h2>
             
-            <!-- VÙNG LƯỚI (GRID) CHỨA CÁC Ô NHẬP LIỆU -->          
             <div class="form-grid">
-                <!-- Chọn Lớp -->
                 <div class="form-group">
                     <label for="sel-grade">Lớp:</label>
                     <select id="sel-grade">
@@ -60,7 +58,6 @@
                     </select>
                 </div>
 
-                <!-- Chọn Bộ sách (Mặc định Kết nối tri thức) -->
                 <div class="form-group">
                     <label for="sel-book">Bộ sách:</label>
                     <select id="sel-book">
@@ -70,15 +67,11 @@
                     </select>
                 </div>
 
-                <!-- Chọn Tên bài dạy (Đổ dữ liệu động theo Lớp) -->
                 <div class="form-group">
                     <label for="lesson-name">Tên bài dạy:</label>
-                    <select id="lesson-name">
-                        <!-- Các <option> bài học sẽ được nạp tự động bởi hàm updateLessonOptions() trong app.js -->
-                    </select>
+                    <select id="lesson-name"></select>
                 </div>
 
-                <!-- Điều kiện lớp học -->
                 <div class="form-group">
                     <label for="sel-condition">Điều kiện lớp học:</label>
                     <select id="sel-condition">
@@ -87,7 +80,6 @@
                     </select>
                 </div>
                 
-                <!-- Thời lượng dạy -->
                 <div class="form-group">
                     <label for="lesson-duration">Thời lượng dạy:</label>
                     <select id="lesson-duration">
@@ -96,11 +88,9 @@
                     </select>
                 </div>
             </div>
-            <!-- KẾT THÚC VÙNG LƯỚI -->            
 
-            <button id="btn-generate" onclick="generateKHBD()">🤖 Phân tích & Tạo KHBD</button>
+            <button id="btn-generate" type="button" onclick="generateKHBD()">🤖 Phân tích & Tạo KHBD</button>
             
-            <!-- Trạng thái Loading -->
             <div id="loading" style="display:none; text-align: center;">
                 🤖 AI đang làm việc (Tìm kiếm tài liệu -> Suy luận -> Tạo form -> Kiểm tra)...<br>
                 <span style="font-size: 1.1em; color: var(--danger-color); font-weight: bold; margin-top: 10px; display: inline-block;">
@@ -108,28 +98,23 @@
                 </span>
             </div>
             
-            <!-- Vùng hiển thị kiểm tra chất lượng và bản xem trước -->
             <div id="validation-box" style="display:none;">
                 <h3>Kiểm tra chất lượng</h3>
                 <ul id="validation-list"></ul>
-                <button id="btn-fix" onclick="autoFix()">Tự động sửa lỗi</button>
+                <button id="btn-fix" type="button" onclick="autoFix()">Tự động sửa lỗi</button>
                 
-                <div id="preview-box" style="display:none;">
-                    <!-- Nội dung KHBD sẽ được hiển thị tại đây -->
-                </div>
+                <div id="preview-box" style="display:none;"></div>
 
-                <button id="btn-export" onclick="exportWord()" style="display:none;">⬇️ Xuất File Word (.docx)</button>
+                <button id="btn-export" type="button" onclick="exportWord()" style="display:none;">⬇️ Xuất File Word (.docx)</button>
             </div>
-
         </section>
-
 
         <!-- Màn hình 3: Tạo bài giảng trình chiếu -->
         <section id="sec-slides" style="display:none;">
             <div class="slides-heading">
                 <div>
                     <h2>Tạo bài giảng trình chiếu bằng AI</h2>
-                    <p class="description">AI tra cứu SGK trong Kho tài liệu, xây dựng kịch bản theo thời lượng và xuất tệp PowerPoint.</p>
+                    <p class="description">AI tra cứu SGK trong Kho tài liệu, xây dựng kịch bản theo thời lượng và xuất tệp PowerPoint hoặc Canva AI.</p>
                 </div>
                 <span class="feature-badge">PPTX</span>
             </div>
@@ -206,10 +191,12 @@
                 </div>
             </div>
 
+            <!-- BỔ SUNG NÚT CANVA AI TẠI ĐÂY -->
             <div class="slides-actions">
                 <button id="btn-generate-slides" type="button" onclick="generatePresentation()">✨ AI tạo bài giảng</button>
                 <button id="btn-add-slide" class="secondary-btn" type="button" onclick="addBlankSlide()" disabled>＋ Thêm trang</button>
                 <button id="btn-export-pptx" class="success-btn" type="button" onclick="exportPresentationPptx()" disabled>⬇️ Xuất PowerPoint</button>
+                <button id="btn-export-canva" class="secondary-btn" type="button" onclick="exportCanvaBulkCSV()">🎨 Đẩy sang Canva AI</button>
             </div>
 
             <div id="slides-loading" class="slides-loading" style="display:none;">
@@ -244,24 +231,21 @@
                 Dữ liệu sẽ được lưu an toàn trên trình duyệt để AI tra cứu nội dung khi tạo bài dạy.
             </p>
 
-            <!-- Khu vực tải file -->
             <div class="upload-container" style="border: 2px dashed var(--primary-color, #1e3a8a); padding: 20px; text-align: center; border-radius: 8px; background-color: #f8fafc; margin-bottom: 20px;">
                 <input type="file" id="file-input" accept=".docx, .pdf, .txt" multiple style="display: none;">
-                <button onclick="document.getElementById('file-input').click()" style="background-color: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                <button type="button" onclick="document.getElementById('file-input').click()" style="background-color: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
                     📁 Chọn file tài liệu (.docx, .pdf, .txt)
                 </button>
                 <p id="selected-files-text" style="margin-top: 10px; font-style: italic; color: #666;">Chưa chọn file nào</p>
-                <button id="btn-process-file" onclick="uploadAndIndexFiles()" style="display: none; margin-top: 10px; background-color: #16a34a; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">
+                <button id="btn-process-file" type="button" onclick="uploadAndIndexFiles()" style="display: none; margin-top: 10px; background-color: #16a34a; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">
                     ⚡ Tải lên & Trích xuất dữ liệu
                 </button>
             </div>
 
-            <!-- Trạng thái xử lý -->
             <div id="doc-loading" style="display:none; text-align: center; margin-bottom: 15px; color: #2563eb; font-weight: bold;">
                 ⏳ Đang đọc và trích xuất nội dung file...
             </div>
 
-            <!-- Danh sách tài liệu đã lưu -->
             <h3>📚 Tài liệu hiện có trong bộ nhớ</h3>
             <ul id="doc-list" style="list-style: none; padding: 0; margin-top: 10px;">
                 <li style="color: #888; font-style: italic;">Đang tải danh sách tài liệu...</li>
@@ -275,6 +259,7 @@
     <script src="js/validator.js"></script>
     <script src="js/docx-export.js"></script>
     <script src="js/pptx-export.js"></script>
+    <script src="js/canva-integration.js"></script> <!-- ĐÃ BỔ SUNG FILE TÍCH HỢP CANVA -->
     <script src="js/app.js"></script>
     <script src="js/slides.js"></script>
 </body>
