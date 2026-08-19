@@ -74,15 +74,20 @@ const LESSONS_DATA = {
 // ==========================================
 // 2. HÀM CẬP NHẬT DANH SÁCH BÀI DẠY THEO LỚP
 // ==========================================
+
 function updateLessonOptions() {
     const selectedGrade = document.getElementById('sel-grade').value;
     const lessonSelect = document.getElementById('lesson-name');
+    const slideLessonSelect = document.getElementById('slide-lesson-name'); // Bổ sung
     
     const lessons = LESSONS_DATA[selectedGrade] || [];
     
-    lessonSelect.innerHTML = lessons
+    const optionsHTML = lessons
         .map(lesson => `<option value="${lesson}">${lesson}</option>`)
         .join('');
+        
+    if (lessonSelect) lessonSelect.innerHTML = optionsHTML;
+    if (slideLessonSelect) slideLessonSelect.innerHTML = optionsHTML; // Bổ sung
 }
 
 // ==========================================

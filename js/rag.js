@@ -118,3 +118,49 @@ async function searchKnowledgeBase(lessonName) {
 
     return context || "Không tìm thấy nội dung liên quan trực tiếp trong tài liệu tải lên.";
 }
+
+
+// Hàm trích xuất văn bản từ file tải lên
+async function extractTextFromFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    
+    if (ext === 'txt') {
+        return await file.text();
+    } else if (ext === 'docx') {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+        return result.value;
+    } else if (ext === 'pdf') {
+        // Cần khởi tạo worker cho pdf.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let text = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map(item => item.str).join(" ") + "\n";
+        }
+        return text;
+    } else {
+        throw new Error("Định dạng không được hỗ trợ. Vui lòng chọn .txt, .docx, hoặc .pdf");
+    }
+}
+
+// Hàm hiển thị danh sách tài liệu đã lưu
+async function renderDocList() {
+    const docs = (await localforage.getItem('khbd_documents')) || [];
+    const listEl = document.getElementById('doc-list');
+    if (!listEl) return;
+    
+    if (docs.length === 0) {
+        listEl.innerHTML = '<li style="color: #888; font-style: italic;">Chưa có tài liệu nào trong kho.</li>';
+        return;
+    }
+
+    // Lọc ra các tên file độc nhất để hiển thị
+    const uniqueFiles = [...new Set(docs.map(d => d.fileName))];
+    listEl.innerHTML = uniqueFiles.map(fileName => 
+        `<li>📄 <strong>${fileName}</strong> <span style="color:green; font-size: 0.9em;">(Đã Index)</span></li>`
+    ).join('');
+}

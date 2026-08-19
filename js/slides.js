@@ -310,3 +310,74 @@ function savePresentationDraft() {
     localStorage.setItem("khbd_presentation_draft", JSON.stringify(currentPresentation));
     showSlidesMessage("💾 Đã lưu bản nháp bài giảng!", "success");
 }
+
+
+// Kết nối UI với API để tạo bài giảng
+async function generatePresentation() {
+    const btn = document.getElementById('btn-generate-slides');
+    const loading = document.getElementById('slides-loading');
+    
+    btn.disabled = true;
+    loading.style.display = 'flex'; // Hoặc block tùy CSS của bạn
+    startSlidesTimer();
+    hideSlidesMessage();
+
+    try {
+        const requestData = {
+            grade: document.getElementById('slide-grade').value,
+            book: document.getElementById('slide-book').value,
+            lessonName: document.getElementById('slide-lesson-name').value,
+            duration: document.getElementById('slide-duration').value,
+            slideCount: document.getElementById('slide-count').value,
+            theme: document.getElementById('slide-theme').value,
+            extra: document.getElementById('slide-extra').value
+        };
+
+        // Tìm kiếm context từ RAG
+        const context = await searchKnowledgeBase(requestData.lessonName);
+        
+        // Gọi AI tạo JSON kịch bản
+        currentPresentation = await callPresentationAI(context, requestData);
+        
+        // Hiển thị UI chỉnh sửa
+        renderPresentationEditor();
+        showSlidesMessage("✅ Đã tạo bài giảng thành công!", "success");
+        
+        // Mở khóa các nút tiện ích
+        document.getElementById('btn-export-pptx').disabled = false;
+        document.getElementById('btn-add-slide').disabled = false;
+
+        // Cập nhật prompt preview để user tham khảo (tùy chọn)
+        const promptPreview = document.getElementById('slide-prompt-preview');
+        if(promptPreview) promptPreview.value = buildPresentationPrompt(context, requestData);
+
+    } catch (error) {
+        showSlidesMessage("❌ Lỗi: " + error.message, "danger");
+    } finally {
+        stopSlidesTimer();
+        btn.disabled = false;
+        loading.style.display = 'none';
+    }
+}
+
+// Thêm một trang chiếu trống
+function addBlankSlide() {
+    if (!currentPresentation || !currentPresentation.slides) return;
+    
+    currentPresentation.slides.push({
+        id: `slide_${Date.now()}`,
+        type: "content",
+        layout: "standard_text",
+        title: "Trang chiếu mới",
+        minutes: 2,
+        learningGoal: "Mục tiêu trang...",
+        content: ["Thêm nội dung tại đây..."],
+        sgkCitation: "",
+        interaction: { question: "", options: [], answer: "" },
+        teacherNotes: "",
+        transition: "none"
+    });
+    
+    renderPresentationEditor();
+    showSlidesMessage("Đã thêm một trang chiếu trống ở cuối.", "info");
+}
