@@ -1,5 +1,9 @@
+// ============================================================
+// app.js - QUẢN LÝ GIAO DIỆN, DỮ LIỆU BÀI HỌC VÀ ĐIỀU HƯỚNG
+// ============================================================
+
 // ==========================================
-// DỮ LIỆU BÀI HỌC THEO TỪNG KHỐI LỚP
+// 1. DỮ LIỆU BÀI HỌC THEO TỪNG KHỐI LỚP (SGK KẾT NỐI TRI THỨC)
 // ==========================================
 const LESSONS_DATA = {
   "6": [
@@ -8,21 +12,22 @@ const LESSONS_DATA = {
     "Bài 3. Thông tin trong máy tính",
     "Bài 4. Mạng máy tính",
     "Bài 5. Internet",
-    "Bài 6. Mạng thông tin toàn cầu",
+    "Bài 6. World Wide Web và thư điện tử",
     "Bài 7. Tìm kiếm thông tin trên Internet",
     "Bài 8. Thư điện tử",
     "Bài 9. An toàn thông tin trên Internet",
-    "Bài 10. Sơ đồ tư duy",
-    "Bài 11. Định dạng văn bản",
-    "Bài 12. Trình bày thông tin ở dạng bảng",
-    "Bài 13. Thực hành: Tìm kiếm và thay thế",
-    "Bài 14. Thực hành tổng hợp: Hoàn thiện sổ lưu niệm",
+    "Bài 10. Quyền riêng tư trong thế giới số",
+    "Bài 11. Ứng xử văn hóa và tôn trọng bản quyền trên môi trường số",
+    "Bài 12. Soạn thảo văn bản cơ bản",
+    "Bài 13. Định dạng văn bản",
+    "Bài 14. Thực hành tổng hợp soạn thảo văn bản",
     "Bài 15. Thuật toán",
-    "Bài 16. Các cấu trúc điều khiển",
-    "Bài 17. Chương trình máy tính"
+    "Bài 16. Biểu diễn thuật toán bằng sơ đồ khối",
+    "Bài 17. Chương trình máy tính và ngôn ngữ lập trình",
+    "Bài 18. Nghề nghiệp trong lĩnh vực Tin học"
   ],
   "7": [
-    "Bài 1. Thiết bị vào – ra",
+    "Bài 1. Thiết bị vào - ra",
     "Bài 2. Phần mềm máy tính",
     "Bài 3. Quản lí dữ liệu trong máy tính",
     "Bài 4. Mạng xã hội và một số kênh trao đổi thông tin trên Internet",
@@ -34,32 +39,21 @@ const LESSONS_DATA = {
     "Bài 10. Hoàn thiện bảng tính",
     "Bài 11. Tạo bài trình chiếu",
     "Bài 12. Định dạng đối tượng trên trang chiếu",
-    "Bài 13. Thực hành tổng hợp: Hoàn thiện bài trình chiếu",
-    "Bài 14. Thuật toán tìm kiếm tuần tự",
-    "Bài 15. Thuật toán tìm kiếm nhị phân",
-    "Bài 16. Thuật toán sắp xếp"
+    "Bài 13. Thực hành tổng hợp"
   ],
   "8": [
-    "Bài 1. Lược sử công cụ tính toán",
+    "Bài 1. Sử dụng thiết bị điện an toàn",
     "Bài 2. Thông tin trong môi trường số",
-    "Bài 3. Thực hành: Khai thác thông tin số",
-    "Bài 4. Đạo đức và văn hoá trong sử dụng công nghệ kĩ thuật số",
-    "Bài 5. Sử dụng bảng tính giải quyết bài toán thực tế",
+    "Bài 3. Khai thác thông tin số",
+    "Bài 4. Đạo đức và văn hóa trong sử dụng công nghệ số",
+    "Bài 5. Sử dụng bảng tính để giải quyết bài toán thực tiễn",
     "Bài 6. Sắp xếp và lọc dữ liệu",
-    "Bài 7. Trực quan hoá dữ liệu",
-    "Bài 8a. Làm việc với danh sách dạng liệt kê và hình ảnh trong văn bản",
-    "Bài 9a. Tạo đầu trang, chân trang cho văn bản",
-    "Bài 10a. Định dạng nâng cao cho trang chiếu",
-    "Bài 11a. Sử dụng bản mẫu tạo bài trình chiếu",
-    "Bài 8b. Phần mềm chỉnh sửa ảnh",
-    "Bài 9b. Thay đổi khung hình, kích thước ảnh",
-    "Bài 10b. Thêm văn bản, tạo hiệu ứng cho ảnh",
-    "Bài 11b. Thực hành tổng hợp",
-    "Bài 12. Từ thuật toán đến chương trình",
-    "Bài 13. Biểu diễn dữ liệu",
-    "Bài 14. Cấu trúc điều khiển",
-    "Bài 15. Gỡ lỗi",
-    "Bài 16. Tin học với nghề nghiệp"
+    "Bài 7. Trực quan hóa dữ liệu",
+    "Bài 8. Làm quen với lập trình trực quan",
+    "Bài 9. Cấu trúc rẽ nhánh",
+    "Bài 10. Cấu trúc lặp",
+    "Bài 11. Danh sách",
+    "Bài 12. Dự án lập trình"
   ],
   "9": [
     "Bài 1. Thế giới kĩ thuật số",
@@ -67,121 +61,92 @@ const LESSONS_DATA = {
     "Bài 3. Thực hành: Đánh giá chất lượng thông tin",
     "Bài 4. Một số vấn đề pháp lí về sử dụng dịch vụ Internet",
     "Bài 5. Tìm hiểu phần mềm mô phỏng",
-    "Bài 6. Thực hành: Khai thác phần mềm mô phỏng",
+    "Bài 6. Thực hành khám phá phần mềm mô phỏng",
     "Bài 7. Trình bày thông tin trong trao đổi và hợp tác",
-    "Bài 8. Thực hành: Sử dụng công cụ trực quan trình bày thông tin trong trao đổi và hợp tác",
-    "Bài 9a. Sử dụng công cụ xác thực dữ liệu",
-    "Bài 10a. Sử dụng hàm COUNTIF",
-    "Bài 11a. Sử dụng hàm SUMIF",
-    "Bài 12a. Sử dụng hàm IF",
-    "Bài 13a. Hoàn thiện bảng tính quản lí tài chính gia đình",
-    "Bài 9b. Các chức năng chính của phần mềm làm video",
-    "Bài 10b. Chuẩn bị dữ liệu và dựng video",
-    "Bài 11b. Thực hành: Dựng video theo kịch bản",
-    "Bài 12b. Hoàn thành việc dựng video",
-    "Bài 13b. Biên tập và xuất video",
-    "Bài 14. Giải quyết vấn đề",
-    "Bài 15. Bài toán tin học",
-    "Bài 16. Thực hành: Lập chương trình máy tính",
-    "Bài 17. Tin học và thế giới nghề nghiệp"
+    "Bài 8. Thiết kế sản phẩm số",
+    "Bài 9. Giới thiệu về trí tuệ nhân tạo",
+    "Bài 10. AI trong khoa học",
+    "Bài 11. AI với cuộc sống",
+    "Bài 12. Dự án ứng dụng AI"
   ]
 };
 
 // ==========================================
-// HÀM CẬP NHẬT DANH SÁCH BÀI DẠY
+// 2. HÀM CẬP NHẬT DANH SÁCH BÀI DẠY THEO LỚP
 // ==========================================
-function fillLessonSelect(selectId, grade) {
-    const lessonSelect = document.getElementById(selectId);
-    if (!lessonSelect) return;
-
-    const lessons = LESSONS_DATA[String(grade)] || [];
-    const previousValue = lessonSelect.value;
-
+function updateLessonOptions() {
+    const selectedGrade = document.getElementById('sel-grade').value;
+    const lessonSelect = document.getElementById('lesson-name');
+    
+    const lessons = LESSONS_DATA[selectedGrade] || [];
+    
     lessonSelect.innerHTML = lessons
         .map(lesson => `<option value="${lesson}">${lesson}</option>`)
         .join('');
-
-    if (lessons.includes(previousValue)) {
-        lessonSelect.value = previousValue;
-    }
-}
-
-function updateLessonOptions() {
-    const gradeSelect = document.getElementById('sel-grade');
-    if (!gradeSelect) return;
-    fillLessonSelect('lesson-name', gradeSelect.value);
-}
-
-function updateSlideLessonOptions() {
-    const gradeSelect = document.getElementById('slide-grade');
-    if (!gradeSelect) return;
-    fillLessonSelect('slide-lesson-name', gradeSelect.value);
 }
 
 // ==========================================
-// ĐIỀU HƯỚNG GIAO DIỆN (TABS)
+// 3. ĐIỀU HƯỚNG GIAO DIỆN (TAB NAVIGATION)
 // ==========================================
-
 function showSection(sectionId) {
-    // 1. Ẩn tất cả các màn hình
+    // Ẩn tất cả màn hình
     document.getElementById('sec-config').style.display = 'none';
     document.getElementById('sec-create').style.display = 'none';
-    document.getElementById('sec-docs').style.display = 'none'; // Thêm màn hình kho tài liệu
-    const slidesSection = document.getElementById('sec-slides');
-    if (slidesSection) slidesSection.style.display = 'none';
+    const docsSec = document.getElementById('sec-docs');
+    if (docsSec) docsSec.style.display = 'none';
     
-    // 2. Bỏ highlight ở tất cả nút nav
+    // Bỏ active nút nav
     const navButtons = document.querySelectorAll('nav button');
     navButtons.forEach(btn => btn.classList.remove('active'));
 
-    // 3. Hiển thị màn hình được chọn
+    // Hiển thị màn hình chọn
     const targetSec = document.getElementById(sectionId);
     if (targetSec) targetSec.style.display = 'block';
 
-    // 4. Highlight nút nav tương ứng
+    // Highlight nút tương ứng
     if (sectionId === 'sec-config') {
         document.getElementById('nav-config').classList.add('active');
     } else if (sectionId === 'sec-create') {
         document.getElementById('nav-create').classList.add('active');
-    } else if (sectionId === 'sec-slides') {
-        document.getElementById('nav-slides')?.classList.add('active');
-        if (typeof syncSlidesFormFromKHBD === 'function') syncSlidesFormFromKHBD();
     } else if (sectionId === 'sec-docs') {
-        document.getElementById('nav-docs').classList.add('active');
-        // Khi mở kho tài liệu, tự động hiển thị danh sách các file đã lưu
+        const btnDocs = document.getElementById('nav-docs');
+        if (btnDocs) btnDocs.classList.add('active');
         if (typeof renderDocList === 'function') renderDocList();
     }
 }
 
-// Gắn sự kiện click cho nút nav Kho tài liệu
-document.getElementById('nav-docs').addEventListener('click', () => showSection('sec-docs'));
-
-// Sự kiện khi người dùng chọn file từ máy tính
-document.getElementById('file-input').addEventListener('change', function(e) {
-    const files = e.target.files;
-    const infoText = document.getElementById('selected-files-text');
-    const btnProcess = document.getElementById('btn-process-file');
-    
-    if (files.length > 0) {
-        infoText.innerText = `Đã chọn ${files.length} file: ` + Array.from(files).map(f => f.name).join(', ');
-        btnProcess.style.display = 'inline-block';
-    } else {
-        infoText.innerText = 'Chưa chọn file nào';
-        btnProcess.style.display = 'none';
-    }
-});
-
-// Gắn sự kiện chuyển tab
+// Gắn sự kiện chuyển Tab
 document.getElementById('nav-config').addEventListener('click', () => showSection('sec-config'));
 document.getElementById('nav-create').addEventListener('click', () => showSection('sec-create'));
-document.getElementById('nav-slides')?.addEventListener('click', () => showSection('sec-slides'));
 
-// GẮN SỰ KIỆN: Thay đổi Lớp -> Tự động đổi danh sách Bài dạy
+const navDocsBtn = document.getElementById('nav-docs');
+if (navDocsBtn) {
+    navDocsBtn.addEventListener('click', () => showSection('sec-docs'));
+}
+
+// Gắn sự kiện thay đổi Lớp -> Đổi danh sách bài
 document.getElementById('sel-grade').addEventListener('change', updateLessonOptions);
-document.getElementById('slide-grade')?.addEventListener('change', updateSlideLessonOptions);
+
+// Sự kiện khi người dùng chọn file trong kho tài liệu (nếu có)
+const fileInputEl = document.getElementById('file-input');
+if (fileInputEl) {
+    fileInputEl.addEventListener('change', function(e) {
+        const files = e.target.files;
+        const infoText = document.getElementById('selected-files-text');
+        const btnProcess = document.getElementById('btn-process-file');
+        
+        if (files.length > 0) {
+            infoText.innerText = `Đã chọn ${files.length} file: ` + Array.from(files).map(f => f.name).join(', ');
+            btnProcess.style.display = 'inline-block';
+        } else {
+            infoText.innerText = 'Chưa chọn file nào';
+            btnProcess.style.display = 'none';
+        }
+    });
+}
 
 // ==========================================
-// LƯU CẤU HÌNH API
+// 4. LƯU CẤU HÌNH API KEY
 // ==========================================
 function saveConfig() {
     const apiKey = document.getElementById('api-key').value.trim();
@@ -203,7 +168,7 @@ function saveConfig() {
     const originalText = btn.innerText;
     
     btn.innerText = "✅ Đã lưu! Đang chuyển trang...";
-    btn.style.backgroundColor = "var(--success-color)"; 
+    btn.style.backgroundColor = "var(--success-color, #16a34a)"; 
 
     setTimeout(() => {
         btn.innerText = originalText;
@@ -213,14 +178,13 @@ function saveConfig() {
 }
 
 // ==========================================
-// KHỞI TẠO TRANG (WINDOW ONLOAD)
+// 5. KHỞI TẠO TRANG (WINDOW ONLOAD)
 // ==========================================
 window.onload = function() {
-    // 1. Nạp danh sách bài học lần đầu cho Lớp mặc định
+    // Nạp danh sách bài học cho Lớp mặc định
     updateLessonOptions();
-    updateSlideLessonOptions();
 
-    // 2. Kiểm tra API Key đã lưu
+    // Kiểm tra API Key đã lưu
     const savedKey = localStorage.getItem('khbd_api_key');
     const savedProvider = localStorage.getItem('khbd_api_provider');
     

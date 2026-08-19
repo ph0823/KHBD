@@ -1,157 +1,59 @@
 // ============================================================
-// ai.js
-// AI ENGINE - TẠO KẾ HOẠCH BÀI DẠY TIN HỌC THCS
-// Gemini / OpenAI / OpenRouter
+// ai.js - AI ENGINE HOÀN CHỈNH (KHBD & PRESENTATION BUILDER)
 // ============================================================
 
-
 // ============================================================
-// 1. SYSTEM PROMPT
+// 1. SYSTEM PROMPT HOẠCH ĐỊNH BÀI DẠY (KHBD)
 // ============================================================
 
 const SYSTEM_PROMPT = `
 Bạn là chuyên gia giáo dục môn Tin học THCS tại Việt Nam.
 
 Bạn am hiểu:
-
-- Chương trình GDPT 2018
-- Môn Tin học cấp THCS
+- Chương trình GDPT 2018 & Môn Tin học THCS
 - Công văn 5512/BGDĐT-GDTrH
-- Thiết kế Kế hoạch bài dạy
-- Phát triển phẩm chất và năng lực
-- Năng lực chung
-- Năng lực Tin học
-- Năng lực số
-- Năng lực AI tích hợp (theo quyết định 3439 của Bộ Giáo dục và đào tạo)
-- Dạy học Tin học trong phòng máy
-- Dạy học theo định hướng phát triển năng lực
-- Kiểm tra đánh giá trong dạy học Tin học
+- Tích hợp Năng lực số và Năng lực AI (Quyết định 3439/QĐ-BGDĐT)
+- Phương pháp và công cụ kiểm tra đánh giá phát triển năng lực
 
 ============================================================
 NGUYÊN TẮC BẮT BUỘC
 ============================================================
 
-1. Không được tự bịa nội dung kiến thức của sách giáo khoa.
-
-2. Ưu tiên tuyệt đối nội dung trong CONTEXT được cung cấp
-   bởi giáo viên.
-
-3. Nếu CONTEXT không đủ thông tin để xác định một nội dung,
-   phải xây dựng nội dung ở mức phù hợp và không khẳng định
-   đó là nội dung nguyên văn của sách giáo khoa.
-
-4. Bám sát:
-   - lớp học
-   - bộ sách
-   - tên bài
-   - điều kiện dạy học
-   - thời lượng nếu được cung cấp.
-
-5. Nếu dạy trong phòng máy:
-   - ưu tiên hoạt động thực hành;
-   - học sinh trực tiếp thao tác trên máy;
-   - sản phẩm phải có thể quan sát/kiểm tra được;
-   - giáo viên tổ chức, hướng dẫn và hỗ trợ;
-   - hạn chế biến tiết học thành tiết giảng lý thuyết.
-
-6. KHBD phải theo định hướng Công văn 5512.
-
-7. BẮT BUỘC Tiến trình dạy học của toàn bộ bài học phải bao gồm 4 phần: 
-   - 1. Mở đầu (Khởi động)
-   - 2. Hình thành kiến thức mới (TUYỆT ĐỐI KHÔNG gộp thành 1 hoạt động chung. BẮT BUỘC tách thành các hoạt động con như Hoạt động 2.1, Hoạt động 22, ... tương ứng với từng mục của bài trong sách giáo khoa).
+1. Ưu tiên tuyệt đối nội dung trong CONTEXT từ giáo viên. Không tự bịa kiến thức SGK.
+2. Tiến trình bài dạy gồm 4 phần trải qua 1 lần duy nhất: 
+   - 1. Mở đầu
+   - 2. Hình thành kiến thức mới (Tách thành Hoạt động 2.1, 2.2,...)
    - 3. Luyện tập
    - 4. Vận dụng
-   Tổng thể bài học chỉ trải qua 4 phần này 1 lần duy nhất.
-
-
-8. Mỗi hoạt động phải có:
-   - Mục tiêu
-   - Nội dung
-   - Sản phẩm
-   - Tổ chức thực hiện
-
-9. Trong "Tổ chức thực hiện" phải trình bày chi tiết bằng 4 bước.
-   Khi tạo JSON, nội dung của mỗi phần tử phải bắt đầu bằng:
+3. Mỗi Hoạt động phải gồm: Mục tiêu, Nội dung, Sản phẩm, Đánh giá (Phương pháp, Công cụ, Tiêu chí, Minh chứng), Tổ chức thực hiện.
+4. Trong "Tổ chức thực hiện", trình bày 4 bước bắt buộc bắt đầu bằng:
    - transfer: "Bước 1: " + [Nội dung]
    - execute: "Bước 2: " + [Nội dung]
    - report: "Bước 3: " + [Nội dung]
    - conclude: "Bước 4: " + [Nội dung]
-   Tuyệt đối KHÔNG ĐƯỢC viết các từ "Chuyển giao", "Thực hiện", "Báo cáo", "Kết luận" vào nội dung. 
-
-10. Nội dung phải phù hợp học sinh THCS.
-
-11. Không đưa kiến thức vượt quá mức cần thiết nếu không có
-    căn cứ từ tài liệu hoặc yêu cầu của giáo viên.
-
-12. Các nhiệm vụ học tập phải có sản phẩm cụ thể.
-
-13. Không tạo các hoạt động mang tính hình thức.
-
-14. Không viết các câu chung chung như:
-    "Học sinh tích cực tham gia",
-    "Giáo viên quan sát",
-    "Học sinh hiểu bài"
-    nếu không mô tả nhiệm vụ cụ thể.
-
-15. Năng lực Tin học và năng lực số phải gắn với hoạt động
-    thực tế của học sinh, không liệt kê cho có, ghi chú rõ trong mỗi hoạt động nếu có tích hợp các năng lực này.
-
-16. Phẩm chất phải phù hợp với nhiệm vụ học tập.
-
-17. Đánh giá phải gắn với sản phẩm/nhiệm vụ.
-
-18. Không trả lời bằng Markdown.
-
-19. Chỉ trả về JSON hợp lệ theo schema được yêu cầu.
-20. Phải tạo bảng Thiết bị dạy học chia theo: Giáo viên, Học sinh, Công cụ số, Dự phòng. 
-    Điền CHI TIẾT thiết bị và mục đích sử dụng vào từng đối tượng, TUYỆT ĐỐI KHÔNG ĐỂ TRỐNG nội dung.
-21. Bắt buộc phải có đề xuất Năng lực số và Năng lực AI tích hợp, phải trình bày rõ: Mã, Biểu hiện, Hoạt động, Sản phẩm, Đánh giá.
-22. BẮT BUỘC phải tạo phần Phụ lục ở cuối cùng, chứa nội dung các Phiếu học tập và Đáp án chi tiết để giáo viên in ra cho học sinh.
-    - BẮT BUỘC tạo mảng "appendix" chứa ít nhất 2 Phiếu học tập (Ví dụ: Phiếu học tập A, Phiếu học tập B) phù hợp với từng hoạt động của bài.
-    - Trong mỗi Phiếu học tập, nội dung phải phân chia rõ ràng các phần: Trắc nghiệm (Nhận biết), Điền khuyết (Thông hiểu), và Tự luận/Thực hành (Vận dụng).
-    - Cuối phần Phụ lục, bắt buộc phải có một mục riêng cho "HƯỚNG DẪN CHẤM CỦA GIÁO VIÊN" liệt kê chi tiết đáp án và thang điểm cho từng phiếu.
-
-23. QUY TẮC ĐẶT MÃ CHỈ BÁO NĂNG LỰC (BẮT BUỘC TUÂN THỦ NGHIÊM NGẶT):
-    - Mã Năng lực Tin học: Viết hoa chữ "NL" và chữ cái thường phía sau (Ví dụ: NLa, NLb).   
-    - Mã Năng lực số: Bắt buộc tuân theo định dạng chuẩn phụ thuộc vào thông tin Lớp học. 
-      + Nếu là Lớp 6 hoặc Lớp 7: Mã bắt buộc phải chứa cụm "TC1" (Ví dụ: 1.1.TC1a, 1.2.TC1b).
-      + Nếu là Lớp 8 hoặc Lớp 9: Mã bắt buộc phải chứa cụm "TC2" (Ví dụ: 1.1.TC2a, 1.2.TC2b).
-    - Mã Năng lực AI: Bắt buộc phải viết hoa chữ cái đầu (A, B, C, D) đi kèm số chủ đề và số thứ tự chỉ báo. Định dạng chuẩn phải giống như "A1.1", "B2.1", "C4.1". Tuyệt đối không tự bịa các mã nằm ngoài định dạng này
-    - Các mã này phải được điền chính xác vào thuộc tính "code" trong cấu trúc JSON.
-
-24. PHÂN BỔ TIẾT HỌC (BẮT BUỘC):
-   - Chú ý kỹ "Thời gian thực hiện" (số tiết) của bài học được cung cấp.
-   - Số lượng phần tử trong mảng "periods" BẮT BUỘC phải bằng đúng số tiết của bài học.
-   - Nếu bài học có nhiều tiết, AI phải phân bổ các hoạt động của 4 phần trên vào các tiết sao cho hợp lý logic.
-   - Ví dụ (Bài 2 tiết): Tiết 1 có thể gồm Khởi động và một số hoạt động của Hình thành kiến thức mới. Tiết 2 sẽ tiếp tục phần Hình thành kiến thức mới (nếu còn), sau đó đến Luyện tập và Vận dụng. Không lặp lại hoạt động Khởi động ở Tiết 2.
-
-25. QUY TẮC TRÍCH DẪN HÌNH ẢNH, SƠ ĐỒ SGK:
-    - TUYỆT ĐỐI KHÔNG viết các câu chung chung như: "sơ đồ khối trong SGK mục 2", "hình ảnh trong SGK", "quan sát hình trong sách".
-    - Khi nhắc đến bất kỳ hình ảnh, sơ đồ, bảng biểu nào, BẮT BUỘC phải ghi rõ:
-      + Tên/Mã hình (Ví dụ: Hình 1.2, Hình 1.5, Sơ đồ 2.1)
-      + Tên chi tiết của hình
-      + Số trang cụ thể trong SGK (nếu có thông tin từ Context hoặc dựa theo chuẩn bộ sách).
-    - Định dạng chuẩn bắt buộc dùng trong văn bản:
-      "Hình [Số] - [Tên hình/sơ đồ] (Trang [Số trang], SGK"
-    - Ví dụ chuẩn: "Hình 1.2. Thiết bị vào - ra (Trang 7, SGK)"
-
-26. QUY ĐỊNH ĐỊNH DẠNG PHIẾU HỌC TẬP (PHỤ LỤC):
-    - Mỗi Phiếu học tập BẮT BUỘC phân chia rõ ràng các dòng tiêu đề:
-      + PHẦN I: TRẮC NGHIỆM (NHẬN BIẾT)
-      + PHẦN II: ĐIỀN KHUYẾT (THÔNG HIỂU)
-      + PHẦN III: TỰ LUẬN / THỰC HÀNH (VẬN DỤNG)
-    - Trong PHẦN III (Tự luận / Thực hành), sau mỗi câu hỏi BẮT BUỘC phải tạo 3 - 4 dòng dấu chấm dài liên tiếp để học sinh viết câu trả lời.
-      Ví dụ:
-      ...........................................................................................................................................................
-      ...........................................................................................................................................................
-      ...........................................................................................................................................................
-
+5. NĂNG LỰC AI TÍCH HỢP: 
+   - Chỉ tích hợp khi bài học có nội dung phù hợp (ví dụ: thu thập dữ liệu, trí tuệ nhân tạo, xử lý hình ảnh/giọng nói, phần mềm thông minh).
+   - Nếu nội dung bài học KHÔNG phù hợp tích hợp AI, hãy để mảng "aiCompetencies" là mảng rỗng [].
+6. ĐÁNH GIÁ TRONG TỪNG HOẠT ĐỘNG:
+   - Bắt buộc xác định rõ:
+     + Phương pháp đánh giá (Quan sát, Hỏi đáp, Đánh giá qua sản phẩm, Tự đánh giá/Đánh giá đồng đẳng).
+     + Công cụ đánh giá (Câu hỏi, Phiếu học tập, Bảng kiểm, Rubric, Dạng bài tập).
+     + Tiêu chí đánh giá (Các chuẩn mức học sinh cần đạt).
+     + Minh chứng đánh giá (Sản phẩm, câu trả lời, thao tác thực tế quan sát được).
+7. PHỤ LỤC LINH HOẠT VÀ THỰC TẾ:
+   - Chọn loại phụ lục phù hợp nhất từ: "worksheet", "practice_task", "observation_checklist", "rubric", "exit_ticket", "answer_key".
+   - BẮT BUỘC phải có ít nhất 1 Bảng kiểm (observation_checklist) hoặc Rubric đánh giá trong phần Phụ lục.
+   - Khi tạo Phiếu học tập, có dòng chấm dài (...........) cho phần tự luận/thực hành.
+8. QUY TẮC MÃ CHỈ BÁO:
+   - Năng lực Tin học: NLa, NLb,...
+   - Năng lực số: Lớp 6-7 chứa "TC1" (vd: 1.1.TC1a); Lớp 8-9 chứa "TC2" (vd: 1.1.TC2a).
+   - Năng lực AI: Dạng A1.1, B2.1, C4.1 (chỉ dùng khi có tích hợp AI).
+9. Trích dẫn sơ đồ/hình ảnh SGK chính xác: "Hình [Số] - [Tên hình] (Trang [Số], SGK)".
+10. Chỉ trả về định dạng JSON hợp lệ theo Schema. Không viết Markdown fence \`\`\`json.
 `;
 
-
-
 // ============================================================
-// 2. JSON SCHEMA
+// 2. JSON SCHEMA KHBD (CẬP NHẬT ĐÁNH GIÁ & PHỤ LỤC)
 // ============================================================
 
 const KHBD_SCHEMA = {
@@ -191,42 +93,48 @@ const KHBD_SCHEMA = {
                 },
                 qualities: { type: "array", items: { type: "string" } }
             },
-            // ÉP BUỘC AI PHẢI TẠO NĂNG LỰC SỐ VÀ AI
-            required: ["knowledge", "generalCompetencies", "informaticsCompetencies", "digitalCompetencies", "aiCompetencies", "qualities"]
+            required: ["knowledge", "generalCompetencies", "informaticsCompetencies", "digitalCompetencies", "qualities"]
         },
         equipment: {
             type: "array",
             items: {
                 type: "object",
                 properties: { target: { type: "string" }, items: { type: "string" }, purpose: { type: "string" } },
-                // ÉP BUỘC ĐIỀN ĐỦ THÔNG TIN THIẾT BỊ
                 required: ["target", "items", "purpose"]
             }
         },        
-        // Các hoạt động theo từng Tiết học
         periods: {
             type: "array",
             items: {
                 type: "object",
                 properties: {
-                    periodName: { type: "string", description: "Ví dụ: TIẾT 1: THÔNG TIN, DỮ LIỆU VÀ VẬT MANG TIN" },
+                    periodName: { type: "string" },
                     activities: {
                         type: "array",
-                        // AI tự do phân bổ số lượng hoạt động theo tiết
                         items: {
                             type: "object",
                             properties: {
-                                name: { type: "string", description: "BẮT BUỘC ghi rõ tên phân cấp. Ví dụ: Hoạt động 1: Khởi động; Hoạt động 2: Hình thành kiến thức, Hoạt động 2.1: Tìm hiểu dữ liệu; Hoạt động 2.2: Phân loại dữ liệu; Hoạt động 3: Luyện tập..." }, 
+                                name: { type: "string" }, 
                                 objectives: { type: "array", items: { type: "string" } }, 
                                 content: { type: "string" }, 
                                 products: { type: "string" },
+                                assessment: {
+                                    type: "object",
+                                    properties: {
+                                        method: { type: "string" },
+                                        tool: { type: "string" },
+                                        criteria: { type: "string" },
+                                        evidence: { type: "string" }
+                                    },
+                                    required: ["method", "tool", "criteria", "evidence"]
+                                },
                                 organization: { 
                                     type: "object", 
                                     properties: { transfer: { type: "string" }, execute: { type: "string" }, report: { type: "string" }, conclude: { type: "string" } }, 
                                     required: ["transfer", "execute", "report", "conclude"] 
                                 }
                             },
-                            required: ["name", "objectives", "content", "products", "organization"]
+                            required: ["name", "objectives", "content", "products", "assessment", "organization"]
                         }
                     }
                 },
@@ -237,971 +145,194 @@ const KHBD_SCHEMA = {
             type: "array",
             items: {
                 type: "object",
-                properties: { title: { type: "string" }, content: { type: "string" } },
-                required: ["title", "content"]
+                properties: { 
+                    type: { 
+                        type: "string", 
+                        enum: ["worksheet", "practice_task", "observation_checklist", "rubric", "exit_ticket", "answer_key"] 
+                    },
+                    title: { type: "string" }, 
+                    content: { type: "string" } 
+                },
+                required: ["type", "title", "content"]
             }
         }
     },
-    // ÉP BUỘC PHẢI CÓ PHỤ LỤC
     required: ["lesson", "objectives", "equipment", "periods", "appendix"]
 };
 
-
 // ============================================================
-// 3. HÀM LÀM SẠCH JSON
+// 3. TIỆN ÍCH LÀM SẠCH VÀ LẤY CẤU HÌNH API
 // ============================================================
 
 function cleanJSON(text) {
-
-    if (!text) {
-
-        throw new Error(
-            "AI không trả về nội dung."
-        );
-    }
-
+    if (!text) throw new Error("AI không trả về nội dung.");
     let cleaned = String(text).trim();
 
-
-    // Loại bỏ Markdown code fence nếu có
     cleaned = cleaned
         .replace(/^```json\s*/i, "")
         .replace(/^```\s*/i, "")
         .replace(/\s*```$/i, "")
         .trim();
 
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
 
-    // Tìm JSON trong trường hợp AI trả thêm lời dẫn
-    const firstBrace =
-        cleaned.indexOf("{");
-
-    const lastBrace =
-        cleaned.lastIndexOf("}");
-
-
-    if (
-        firstBrace !== -1 &&
-        lastBrace !== -1 &&
-        lastBrace > firstBrace
-    ) {
-
-        cleaned =
-            cleaned.substring(
-                firstBrace,
-                lastBrace + 1
-            );
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
     }
 
-
     try {
-
         return JSON.parse(cleaned);
-
     } catch (error) {
-
-        console.error(
-            "JSON AI trả về không hợp lệ:",
-            cleaned
-        );
-
-        throw new Error(
-            "AI trả về JSON không hợp lệ. " +
-            "Hãy thử tạo lại KHBD."
-        );
+        console.error("JSON AI trả về không hợp lệ:", cleaned);
+        throw new Error("AI trả về JSON không hợp lệ. Hãy thử tạo lại KHBD.");
     }
 }
 
-
-// ============================================================
-// 4. LẤY API KEY
-// ============================================================
-
 function getAPIKey() {
-
-    const apiKey =
-        localStorage.getItem(
-            "khbd_api_key"
-        );
-
-    if (!apiKey) {
-
-        throw new Error(
-            "Chưa cấu hình API Key. " +
-            "Hãy quay lại phần Cài đặt API."
-        );
-    }
-
+    const apiKey = localStorage.getItem("khbd_api_key");
+    if (!apiKey) throw new Error("Chưa cấu hình API Key. Hãy quay lại phần Cài đặt API.");
     return apiKey.trim();
 }
 
-
-// ============================================================
-// 5. LẤY PROVIDER
-// ============================================================
-
 function getProvider() {
-
-    return (
-        localStorage.getItem(
-            "khbd_api_provider"
-        ) || "gemini"
-    ).toLowerCase().trim();
+    return (localStorage.getItem("khbd_api_provider") || "gemini").toLowerCase().trim();
 }
 
-
 // ============================================================
-// 6. GEMINI - INTERACTIONS API
+// 4. CÁC HÀM GỌI API CHO KHBD (GEMINI / OPENAI / OPENROUTER)
 // ============================================================
 
 async function callGemini(apiKey, prompt) {
-
-    if (!apiKey) {
-
-        throw new Error(
-            "Chưa nhập Gemini API Key."
-        );
-    }
-
-
-    // Model stable hiện tại
-    const model =
-        "gemini-3.6-flash";
-
-
-    // Interactions API stable
-    const endpoint =
-        "https://generativelanguage.googleapis.com/v1/interactions";
-
+    const model = "gemini-3.6-flash";
+    const endpoint = "[https://generativelanguage.googleapis.com/v1/interactions](https://generativelanguage.googleapis.com/v1/interactions)";
 
     const requestBody = {
-
         model: model,
-
         input: prompt,
-
-        system_instruction:
-            SYSTEM_PROMPT,
-
-
-        // Không lưu interaction trên server.
-        // Phù hợp với tài liệu giáo viên.
+        system_instruction: SYSTEM_PROMPT,
         store: false,
-
-
-        // Structured Output
-        response_format: {
-
-            type: "text",
-
-            mime_type:
-                "application/json",
-
-            schema:
-                KHBD_SCHEMA
-        }
-
+        response_format: { type: "text", mime_type: "application/json", schema: KHBD_SCHEMA }
     };
 
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+        body: JSON.stringify(requestBody)
+    });
 
-    console.log(
-        "Gemini request:",
-        {
-            model: model,
-            endpoint: endpoint
-        }
-    );
+    const data = await response.json();
+    if (!response.ok) throw new Error(`Gemini API Error (${response.status}): ${data?.error?.message || "Lỗi kết nối"}`);
 
-
-    let response;
-
-
-    try {
-
-        response = await fetch(
-            endpoint,
-            {
-
-                method: "POST",
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json",
-
-                    "x-goog-api-key":
-                        apiKey
-                },
-
-                body:
-                    JSON.stringify(
-                        requestBody
-                    )
-            }
-        );
-
-    } catch (networkError) {
-
-        console.error(
-            "Gemini network error:",
-            networkError
-        );
-
-        throw new Error(
-            "Không thể kết nối Gemini API. " +
-            "Kiểm tra Internet hoặc CORS."
-        );
-    }
-
-
-    // Đọc response một lần
-    let data;
-
-    try {
-
-        data =
-            await response.json();
-
-    } catch (error) {
-
-        const rawText =
-            await response.text();
-
-        console.error(
-            "Gemini raw response:",
-            rawText
-        );
-
-        throw new Error(
-            `Gemini API (${response.status}): ` +
-            "Máy chủ trả về dữ liệu không hợp lệ."
-        );
-    }
-
-
-    // ========================================================
-    // XỬ LÝ LỖI HTTP
-    // ========================================================
-
-    if (!response.ok) {
-
-        console.error(
-            "Gemini API error:",
-            data
-        );
-
-
-        const code =
-            data?.error?.code ||
-            response.status;
-
-
-        const status =
-            data?.error?.status ||
-            "";
-
-
-        const message =
-            data?.error?.message ||
-            "Lỗi không xác định";
-
-
-        if (response.status === 401) {
-
-            throw new Error(
-                "Gemini API (401): API Key không hợp lệ " +
-                "hoặc không được chấp nhận."
-            );
-        }
-
-
-        if (response.status === 403) {
-
-            throw new Error(
-                "Gemini API (403): API Key không có " +
-                "quyền sử dụng model này hoặc API chưa được bật."
-            );
-        }
-
-
-        if (response.status === 404) {
-
-            throw new Error(
-                "Gemini API (404): Model hoặc endpoint " +
-                "không tồn tại/không khả dụng cho tài khoản này. " +
-                `Model: ${model}`
-            );
-        }
-
-
-        if (response.status === 429) {
-
-            throw new Error(
-                "Gemini API (429): Đã vượt quá quota hoặc " +
-                "giới hạn tốc độ. Hãy thử lại sau."
-            );
-        }
-
-
-        throw new Error(
-            `Gemini API (${code}${status ? " - " + status : ""}): ` +
-            message
-        );
-    }
-
-
-    // ========================================================
-    // LẤY OUTPUT TỪ INTERACTIONS API
-    // ========================================================
-
-    let outputText = "";
-
-
-    // Một số response có output_text
-    if (
-        typeof data.output_text === "string" &&
-        data.output_text.trim()
-    ) {
-
-        outputText =
-            data.output_text.trim();
-    }
-
-
-    // Response chuẩn Interactions API:
-    // steps -> model_output -> content -> text
-
-    if (
-        !outputText &&
-        Array.isArray(data.steps)
-    ) {
-
-        for (
-            const step of data.steps
-        ) {
-
-            if (
-                step?.type ===
-                "model_output"
-            ) {
-
-                const contents =
-                    step.content;
-
-
-                if (
-                    Array.isArray(contents)
-                ) {
-
-                    for (
-                        const item
-                        of contents
-                    ) {
-
-                        if (
-                            item?.type ===
-                            "text" &&
-                            typeof item.text ===
-                            "string"
-                        ) {
-
-                            outputText +=
-                                item.text;
-                        }
-                    }
+    let outputText = data.output_text || "";
+    if (!outputText && Array.isArray(data.steps)) {
+        for (const step of data.steps) {
+            if (step?.type === "model_output" && Array.isArray(step.content)) {
+                for (const item of step.content) {
+                    if (item?.type === "text") outputText += item.text;
                 }
             }
         }
-
-        outputText =
-            outputText.trim();
     }
-
-
-    // Một số phiên bản API có outputs
-    if (
-        !outputText &&
-        Array.isArray(data.outputs)
-    ) {
-
-        for (
-            const output
-            of data.outputs
-        ) {
-
-            if (
-                typeof output?.text ===
-                "string"
-            ) {
-
-                outputText +=
-                    output.text;
-            }
-        }
-
-        outputText =
-            outputText.trim();
-    }
-
-
-    if (!outputText) {
-
-        console.error(
-            "Gemini response không chứa output:",
-            data
-        );
-
-        throw new Error(
-            "Gemini không trả về nội dung KHBD."
-        );
-    }
-
-
-    console.log(
-        "Gemini output:",
-        outputText
-    );
-
-
-    return cleanJSON(
-        outputText
-    );
+    return cleanJSON(outputText);
 }
 
+async function callOpenAI(apiKey, prompt) {
+    const endpoint = "[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)";
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+            temperature: 0.2
+        })
+    });
 
-// ============================================================
-// 7. OPENAI
-// ============================================================
-
-async function callOpenAI(
-    apiKey,
-    prompt
-) {
-
-    if (!apiKey) {
-
-        throw new Error(
-            "Chưa nhập OpenAI API Key."
-        );
-    }
-
-
-    const endpoint =
-        "https://api.openai.com/v1/chat/completions";
-
-
-    const response =
-        await fetch(
-            endpoint,
-            {
-
-                method: "POST",
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json",
-
-                    "Authorization":
-                        `Bearer ${apiKey}`
-                },
-
-
-                body:
-                    JSON.stringify({
-
-                        model:
-                            "gpt-4o-mini",
-
-                        messages: [
-
-                            {
-                                role:
-                                    "system",
-
-                                content:
-                                    SYSTEM_PROMPT
-                            },
-
-                            {
-                                role:
-                                    "user",
-
-                                content:
-                                    prompt
-                            }
-
-                        ],
-
-
-                        response_format: {
-
-                            type:
-                                "json_object"
-                        },
-
-                        temperature:
-                            0.2
-                    })
-            }
-        );
-
-
-    const data =
-        await response.json();
-
-
-    if (!response.ok) {
-
-        console.error(
-            "OpenAI API error:",
-            data
-        );
-
-
-        const message =
-            data?.error?.message ||
-            "Lỗi không xác định";
-
-
-        throw new Error(
-            `OpenAI API (${response.status}): ${message}`
-        );
-    }
-
-
-    const text =
-        data
-            ?.choices?.[0]
-            ?.message?.content;
-
-
-    if (!text) {
-
-        throw new Error(
-            "OpenAI không trả về nội dung."
-        );
-    }
-
-
-    return cleanJSON(text);
+    const data = await response.json();
+    if (!response.ok) throw new Error(`OpenAI API Error (${response.status}): ${data?.error?.message}`);
+    return cleanJSON(data?.choices?.[0]?.message?.content);
 }
 
+async function callOpenRouter(apiKey, prompt) {
+    const endpoint = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": window.location.origin,
+            "X-Title": "AI KHBD Tin Hoc THCS"
+        },
+        body: JSON.stringify({
+            model: "google/gemini-3.6-flash",
+            messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: prompt }],
+            response_format: { type: "json_schema", json_schema: { name: "khbd", strict: true, schema: KHBD_SCHEMA } },
+            temperature: 0.2,
+            stream: false
+        })
+    });
 
-// ============================================================
-// 8. OPENROUTER
-// ============================================================
-
-async function callOpenRouter(
-    apiKey,
-    prompt
-) {
-
-    if (!apiKey) {
-
-        throw new Error(
-            "Chưa nhập OpenRouter API Key."
-        );
-    }
-
-
-    const endpoint =
-        "https://openrouter.ai/api/v1/chat/completions";
-
-
-    const response =
-        await fetch(
-            endpoint,
-            {
-
-                method: "POST",
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json",
-
-                    "Authorization":
-                        `Bearer ${apiKey}`,
-
-                    "HTTP-Referer":
-                        window.location.origin,
-
-                    "X-Title":
-                        "AI KHBD Tin Hoc THCS"
-                },
-
-
-                body:
-                    JSON.stringify({
-
-                        model:
-                            "google/gemini-3.6-flash",
-
-
-                        messages: [
-
-                            {
-                                role:
-                                    "system",
-
-                                content:
-                                    SYSTEM_PROMPT
-                            },
-
-                            {
-                                role:
-                                    "user",
-
-                                content:
-                                    prompt
-                            }
-
-                        ],
-
-
-                        response_format: {
-
-                            type:
-                                "json_schema",
-
-                            json_schema: {
-
-                                name:
-                                    "khbd",
-
-                                strict:
-                                    true,
-
-                                schema:
-                                    KHBD_SCHEMA
-                            }
-                        },
-
-
-                        temperature:
-                            0.2,
-
-                        stream:
-                            false
-                    })
-            }
-        );
-
-
-    const data =
-        await response.json();
-
-
-    if (!response.ok) {
-
-        console.error(
-            "OpenRouter API error:",
-            data
-        );
-
-
-        const message =
-            data?.error?.message ||
-            "Lỗi không xác định";
-
-
-        throw new Error(
-            `OpenRouter API (${response.status}): ${message}`
-        );
-    }
-
-
-    const text =
-        data
-            ?.choices?.[0]
-            ?.message?.content;
-
-
-    if (!text) {
-
-        throw new Error(
-            "OpenRouter không trả về nội dung."
-        );
-    }
-
-
-    return cleanJSON(text);
+    const data = await response.json();
+    if (!response.ok) throw new Error(`OpenRouter API Error (${response.status}): ${data?.error?.message}`);
+    return cleanJSON(data?.choices?.[0]?.message?.content);
 }
 
-
-// ============================================================
-// 9. TẠO USER PROMPT
-// ============================================================
-
-function buildUserPrompt(
-    context,
-    requestData
-) {
-
-    const grade =
-        requestData?.grade ||
-        "";
-
-    const book =
-        requestData?.book ||
-        "";
-
-    const lessonName =
-        requestData?.lessonName ||
-        "";
-
-    const condition =
-        requestData?.condition ||
-        "";
-
+function buildUserPrompt(context, requestData) {
+    const grade = requestData?.grade || "";
+    const book = requestData?.book || "";
+    const lessonName = requestData?.lessonName || "";
+    const condition = requestData?.condition || "";
     const duration = requestData?.duration || "2 tiết";
-
-    const safeContext =
-        context &&
-        String(context).trim()
-            ? String(context)
-            : "Không tìm thấy tài liệu liên quan.";
-
+    const safeContext = context && String(context).trim() ? String(context) : "Không có tài liệu tải lên.";
 
     return `
-
 ============================================================
-THÔNG TIN YÊU CẦU
+THÔNG TIN BÀI HỌC
 ============================================================
-
-Môn học: Tin học
-Lớp: ${grade}
-Bộ sách: ${book}
+Môn học: Tin học | Lớp: ${grade} | Bộ sách: ${book}
 Tên bài: ${lessonName}
 Điều kiện dạy học: ${condition}
-Thời lượng thực hiện: ${duration}
+Thời lượng: ${duration}
 
 ============================================================
-NGỮ CẢNH TỪ TÀI LIỆU GIÁO VIÊN
+TÀI LIỆU THAM KHẢO (CONTEXT)
 ============================================================
-
 ${safeContext}
 
-
 ============================================================
-NHIỆM VỤ
+YÊU CẦU ĐẶC BIỆT
 ============================================================
-
-Hãy tạo một Kế hoạch bài dạy hoàn chỉnh cho bài học trên.
-
-Phải bám sát nội dung tài liệu giáo viên cung cấp.
-
-Nếu tài liệu có thông tin về:
-- mục tiêu;
-- kiến thức;
-- yêu cầu cần đạt;
-- hoạt động học tập;
-- bài tập;
-- ví dụ;
-- hình thức tổ chức;
-- năng lực;
-- phẩm chất;
-
-thì phải ưu tiên sử dụng các thông tin đó.
-
-Nếu điều kiện là phòng máy, hãy thiết kế các nhiệm vụ
-thực hành trực tiếp trên máy tính.
-
-
-============================================================
-CẤU TRÚC BẮT BUỘC
-============================================================
-
-lesson
-objectives
-equipment
-activities
-assessment
-
-
-============================================================
-YÊU CẦU 4 HOẠT ĐỘNG
-============================================================
-
-Hoạt động 1:
-Mở đầu
-
-Hoạt động 2:
-Hình thành kiến thức
-
-Hoạt động 3:
-Luyện tập
-
-Hoạt động 4:
-Vận dụng
-
-
-============================================================
-YÊU CẦU TỔ CHỨC HOẠT ĐỘNG
-============================================================
-
-Mỗi hoạt động phải có:
-
-1. Mục tiêu
-2. Nội dung
-3. Sản phẩm
-4. Tổ chức thực hiện
-
-Trong tổ chức thực hiện, chỉ trình bày nội dung của 4 bước 
-- Bước 1:
-- Bước 2:
-- Bước 3:
-- Bước 4:
-(vào các biến tương ứng transfer, execute, report, conclude). 
-Tuyệt đối KHÔNG viết các từ: "Chuyển giao", "Thực hiện", "Báo cáo", "Kết luận".
-
-============================================================
-YÊU CẦU VỀ NĂNG LỰC
-============================================================
-
-Không liệt kê năng lực một cách chung chung.
-
-Năng lực phải gắn với nhiệm vụ cụ thể.
-
-Đặc biệt chú ý:
-
-- Năng lực chung
-- Năng lực Tin học
-- Năng lực số
-- Năng lực AI
-
-Nếu tài liệu cung cấp mã năng lực số, mã năng lực AI thì sử dụng
-đúng mã được cung cấp.
-
-
-============================================================
-YÊU CẦU ĐÁNH GIÁ
-============================================================
-
-Đánh giá phải dựa trên sản phẩm hoặc nhiệm vụ học tập.
-
-Ưu tiên:
-- quan sát;
-- hỏi đáp;
-- sản phẩm thực hành;
-- bài tập;
-- phiếu học tập;
-- thực hành trên máy;
-- tự đánh giá;
-- đánh giá đồng đẳng.
-
-============================================================
-YÊU CẦU VỀ HÌNH ẢNH VÀ SƠ ĐỒ SGK
-============================================================
-Trong phần "Nội dung" (content) và "Tổ chức thực hiện" (organization) của mỗi hoạt động:
-- Mọi sơ đồ, hình ảnh minh họa BẮT BUỘC phải trích dẫn chính xác mã hình và số trang SGK.
-- Ví dụ: Thay vì viết "Học sinh quan sát sơ đồ mục 2", BẮT BUỘC viết "Học sinh nghiên cứu Sơ đồ khối mối quan hệ giữa các bộ phận - Hình 1.2 (Trang 7, SGK)".
-
-============================================================
-YÊU CẦU CUỐI CÙNG
-============================================================
-
-Chỉ trả về JSON.
-
-Không Markdown.
-
-Không sử dụng:
-\`\`\`json
-
-Không thêm lời giải thích bên ngoài JSON.
+1. Kiểm tra xem nội dung bài "${lessonName}" có phù hợp tích hợp AI hay không. Nếu KHÔNG phù hợp, hãy để mảng aiCompetencies rỗng [].
+2. Trong MỖI hoạt động học tập, bắt buộc thiết kế đầy đủ 4 yếu tố đánh giá:
+   - Phương pháp đánh giá (method)
+   - Công cụ đánh giá (tool)
+   - Tiêu chí đánh giá (criteria)
+   - Minh chứng đánh giá (evidence)
+3. Phần Phụ lục (appendix) chọn loại phù hợp trong các dạng (worksheet, practice_task, observation_checklist, rubric, exit_ticket, answer_key). Bắt buộc bao gồm ít nhất 1 Bảng kiểm (observation_checklist) hoặc Rubric chấm điểm thực hành/sản phẩm.
 `;
 }
 
-
-// ============================================================
-// 10. HÀM CALL AI CHÍNH
-// ============================================================
-
-async function callAI(
-    context,
-    requestData
-) {
-
-    const apiKey =
-        getAPIKey();
-
-
-    const provider =
-        getProvider();
-
-
-    const userPrompt =
-        buildUserPrompt(
-            context,
-            requestData
-        );
-
-
-    console.log(
-        "AI Provider:",
-        provider
-    );
-
-
-    console.log(
-        "Request data:",
-        requestData
-    );
-
+async function callAI(context, requestData) {
+    const apiKey = getAPIKey();
+    const provider = getProvider();
+    const userPrompt = buildUserPrompt(context, requestData);
 
     switch (provider) {
-
-
-        // ====================================================
-        // GEMINI
-        // ====================================================
-
         case "gemini":
-
-            return await callGemini(
-                apiKey,
-                userPrompt
-            );
-
-
-        // ====================================================
-        // OPENAI
-        // ====================================================
-
+            return await callGemini(apiKey, userPrompt);
         case "openai":
-
-            return await callOpenAI(
-                apiKey,
-                userPrompt
-            );
-
-
-        // ====================================================
-        // OPENROUTER
-        // ====================================================
-
+            return await callOpenAI(apiKey, userPrompt);
         case "openrouter":
-
-            return await callOpenRouter(
-                apiKey,
-                userPrompt
-            );
-
-
-        // ====================================================
-        // PROVIDER KHÔNG HỢP LỆ
-        // ====================================================
-
+            return await callOpenRouter(apiKey, userPrompt);
         default:
-
-            throw new Error(
-                `Nhà cung cấp AI "${provider}" không hợp lệ.`
-            );
+            throw new Error(`Nhà cung cấp AI "${provider}" không hợp lệ.`);
     }
 }
 
 // ============================================================
-// 11. AI TẠO BÀI GIẢNG TRÌNH CHIẾU
+// 5. TÍNH NĂNG TẠO BÀI GIẢNG TRÌNH CHIẾU (SLIDES ENGINE)
 // ============================================================
 
 const PRESENTATION_SYSTEM_PROMPT = `
@@ -1304,14 +435,10 @@ function buildPresentationPrompt(context, requestData) {
 ============================================================
 THÔNG TIN BÀI DẠY
 ============================================================
-Môn học: Tin học
-Lớp: ${grade}
-Bộ sách: ${book}
+Môn học: Tin học | Lớp: ${grade} | Bộ sách: ${book}
 Tên bài: ${lessonName}
-Thời lượng: ${duration}
-Số lượng: ${slideCount}
-Phong cách: ${theme}
-Yêu cầu bổ sung: ${extra}
+Thời lượng: ${duration} | Số lượng trang: ${slideCount}
+Phong cách: ${theme} | Yêu cầu bổ sung: ${extra}
 
 ============================================================
 CONTEXT TỪ SGK / KHBD CỦA GIÁO VIÊN
@@ -1321,28 +448,7 @@ ${safeContext}
 ============================================================
 NHIỆM VỤ
 ============================================================
-Tạo kịch bản bài giảng trình chiếu hoàn chỉnh, có thể xuất trực tiếp thành PowerPoint.
-
-Cấu trúc đề nghị:
-- 1 trang tiêu đề.
-- 1 trang tình huống hoặc câu hỏi khởi động.
-- 1 trang mục tiêu học tập.
-- Các trang hình thành kiến thức theo đúng các mục có trong CONTEXT.
-- Xen kẽ câu hỏi nhanh, "Em có biết?", ví dụ, hoạt động cá nhân hoặc nhóm.
-- Trang luyện tập có đáp án trong trường answer/teacherNotes.
-- Trang vận dụng gắn thực tế hoặc sản phẩm trên máy tính.
-- Trang sơ đồ tư duy/tóm tắt.
-- Trang thông điệp hoặc nhiệm vụ sau bài học.
-
-Yêu cầu mỗi trang:
-- title rõ ràng.
-- minutes hợp lí; tổng thời gian gần với ${duration}.
-- learningGoal mô tả điều học sinh đạt được.
-- content gồm các ý ngắn, không viết thành đoạn dài.
-- visual.prompt mô tả hình minh họa có thể tạo bằng AI hoặc tìm trong SGK.
-- interaction luôn tồn tại; nếu trang không tương tác thì để chuỗi rỗng và mảng options rỗng.
-- teacherNotes hướng dẫn giáo viên tổ chức, câu trả lời mong đợi và lưu ý trình chiếu.
-- transition là câu nối ngắn sang trang tiếp theo.
+Tạo kịch bản bài giảng trình chiếu hoàn chỉnh, xuất trực tiếp thành PowerPoint.
 
 Chỉ trả về JSON đúng schema, không Markdown.
 `;
@@ -1390,23 +496,16 @@ function extractGeminiInteractionText(data) {
 }
 
 async function callGeminiPresentation(apiKey, prompt) {
-    const endpoint = "https://generativelanguage.googleapis.com/v1/interactions";
+    const endpoint = "[https://generativelanguage.googleapis.com/v1/interactions](https://generativelanguage.googleapis.com/v1/interactions)";
     const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": apiKey
-        },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
             model: "gemini-3.6-flash",
             input: prompt,
             system_instruction: PRESENTATION_SYSTEM_PROMPT,
             store: false,
-            response_format: {
-                type: "text",
-                mime_type: "application/json",
-                schema: PRESENTATION_SCHEMA
-            }
+            response_format: { type: "text", mime_type: "application/json", schema: PRESENTATION_SCHEMA }
         })
     });
 
@@ -1417,18 +516,12 @@ async function callGeminiPresentation(apiKey, prompt) {
 }
 
 async function callOpenAIPresentation(apiKey, prompt) {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
         body: JSON.stringify({
             model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: PRESENTATION_SYSTEM_PROMPT },
-                { role: "user", content: prompt }
-            ],
+            messages: [{ role: "system", content: PRESENTATION_SYSTEM_PROMPT }, { role: "user", content: prompt }],
             response_format: { type: "json_object" },
             temperature: 0.3
         })
@@ -1441,7 +534,7 @@ async function callOpenAIPresentation(apiKey, prompt) {
 }
 
 async function callOpenRouterPresentation(apiKey, prompt) {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch("[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -1451,18 +544,8 @@ async function callOpenRouterPresentation(apiKey, prompt) {
         },
         body: JSON.stringify({
             model: "google/gemini-3.6-flash",
-            messages: [
-                { role: "system", content: PRESENTATION_SYSTEM_PROMPT },
-                { role: "user", content: prompt }
-            ],
-            response_format: {
-                type: "json_schema",
-                json_schema: {
-                    name: "lesson_presentation",
-                    strict: true,
-                    schema: PRESENTATION_SCHEMA
-                }
-            },
+            messages: [{ role: "system", content: PRESENTATION_SYSTEM_PROMPT }, { role: "user", content: prompt }],
+            response_format: { type: "json_schema", json_schema: { name: "lesson_presentation", strict: true, schema: PRESENTATION_SCHEMA } },
             temperature: 0.3,
             stream: false
         })

@@ -1,3 +1,7 @@
+// ============================================================
+// validator.js - XỬ LÝ KIỂM TRA & HIỂN THỊ XEM TRƯỚC (PREVIEW)
+// ============================================================
+
 let currentKHBD = null;
 
 // ==========================================
@@ -7,26 +11,22 @@ let timerInterval = null;
 let secondsCounter = 0;
 
 function startTimer() {
-    // 1. Dọn dẹp bộ đếm cũ nếu có
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
     }
     
-    // 2. Reset thời gian về 0
     secondsCounter = 0;
     const initialTimerEl = document.getElementById('timer');
     if (initialTimerEl) {
         initialTimerEl.innerText = "00:00";
     }
     
-    // 3. Khởi động bộ đếm mới
     timerInterval = setInterval(() => {
         secondsCounter++;
         let m = Math.floor(secondsCounter / 60).toString().padStart(2, '0');
         let s = (secondsCounter % 60).toString().padStart(2, '0');
         
-        // BÍ QUYẾT: Tìm lại element mỗi giây để đảm bảo không bị mất kết nối DOM
         const currentTimerEl = document.getElementById('timer');
         if (currentTimerEl) {
             currentTimerEl.innerText = `${m}:${s}`;
@@ -48,12 +48,11 @@ async function generateKHBD() {
     document.getElementById('loading').style.display = 'block';
     document.getElementById('validation-box').style.display = 'none';
     
-    // 1. Khóa nút bấm để ngăn click nhiều lần
     const btnGen = document.getElementById('btn-generate');
     btnGen.disabled = true;
     btnGen.innerText = "⏳ Đang xử lý...";
     
-    startTimer(); // Bắt đầu đếm giờ
+    startTimer();
     
     try {
         const requestData = {
@@ -61,26 +60,20 @@ async function generateKHBD() {
             book: document.getElementById('sel-book').value,
             lessonName: document.getElementById('lesson-name').value,
             condition: document.getElementById('sel-condition').value,
-            duration: document.getElementById('lesson-duration').value // bắt thời lượng
+            duration: document.getElementById('lesson-duration').value
         };
         
-        // 1. Retrieval (Tìm kiếm tài liệu)
         const context = await searchKnowledgeBase(requestData.lessonName);
-        
-        // 2. Generate (Gọi AI)
         currentKHBD = await callAI(context, requestData);
         
-        // 3. Validate (Kiểm tra)
         const validationResults = validateKHBD(currentKHBD);
         displayValidation(validationResults);
         
     } catch (e) {
         alert("Lỗi: " + e.message);
     } finally {
-        stopTimer(); // Dừng đếm giờ dù thành công hay thất bại
+        stopTimer();
         document.getElementById('loading').style.display = 'none';
-        
-        // 2. Mở khóa nút bấm sau khi hoàn tất
         btnGen.disabled = false;
         btnGen.innerText = "🤖 Phân tích & Tạo KHBD";
     }
@@ -91,7 +84,7 @@ async function generateKHBD() {
 // ==========================================
 async function autoFix() {
     document.getElementById('loading').style.display = 'block';
-    startTimer(); // Bắt đầu đếm giờ lại
+    startTimer();
 
     try {
         const requestData = {
@@ -99,7 +92,7 @@ async function autoFix() {
             book: document.getElementById('sel-book').value,
             lessonName: document.getElementById('lesson-name').value,
             condition: document.getElementById('sel-condition').value,
-            duration: document.getElementById('lesson-duration').value // bắt thời lượng
+            duration: document.getElementById('lesson-duration').value
         };
         
         const errors = validateKHBD(currentKHBD);
@@ -123,7 +116,6 @@ async function autoFix() {
 // ==========================================
 function validateKHBD(json) {
     let errors = [];
-    // CẬP NHẬT: Kiểm tra mảng periods thay vì activities
     if (!json.periods || json.periods.length === 0) {
         errors.push("Thiếu phần tiến trình dạy học (các tiết học).");
     }
@@ -149,7 +141,6 @@ function displayValidation(errors) {
         list.innerHTML = "<li style='color:green; margin-bottom: 10px;'>✓ KHBD đã đạt chuẩn. Hãy xem trước nội dung bên dưới trước khi tải về.</li>";
         document.getElementById('btn-fix').style.display = 'none';
         
-        // Gọi hàm hiển thị Bản xem trước
         renderPreview(currentKHBD);
         
         document.getElementById('btn-export').style.display = 'block';
@@ -159,12 +150,12 @@ function displayValidation(errors) {
         });
         document.getElementById('btn-fix').style.display = 'inline-block';
         document.getElementById('btn-export').style.display = 'none';
-        document.getElementById('preview-box').style.display = 'none'; // Ẩn xem trước nếu có lỗi
+        document.getElementById('preview-box').style.display = 'none';
     }
 }
 
 // ==========================================
-// TÍNH NĂNG XEM TRƯỚC (PREVIEW)
+// TÍNH NĂNG XEM TRƯỚC (PREVIEW HOÀN CHỈNH)
 // ==========================================
 function renderPreview(json) {
     const previewBox = document.getElementById('preview-box');
@@ -192,7 +183,6 @@ function renderPreview(json) {
         (json.objectives?.informaticsCompetencies || []).forEach(c => html += `<li>${c}</li>`);
         html += `</ul>`;
         
-        // c. Năng lực số 
         if (json.objectives?.digitalCompetencies && json.objectives.digitalCompetencies.length > 0) {
             html += `<p><strong>c. Năng lực số:</strong></p><ul>`;
             json.objectives.digitalCompetencies.forEach(dc => {                
@@ -201,7 +191,6 @@ function renderPreview(json) {
             html += `</ul>`;
         }
         
-        // d. Năng lực AI 
         if (json.objectives?.aiCompetencies && json.objectives.aiCompetencies.length > 0) {
             html += `<p><strong>d. Năng lực AI:</strong></p><ul>`;
             json.objectives.aiCompetencies.forEach(ai => {                
@@ -214,7 +203,6 @@ function renderPreview(json) {
         (json.objectives?.qualities || []).forEach(q => html += `<li>${q}</li>`);
         html += `</ul>`;
 
-        // VẼ BẢNG NĂNG LỰC SỐ
         if (json.objectives?.digitalCompetencies && json.objectives.digitalCompetencies.length > 0) {
             html += `<p><strong>4. Định hướng năng lực số:</strong></p>`;
             html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1" cellpadding="5">`;
@@ -225,7 +213,6 @@ function renderPreview(json) {
             html += `</table>`;
         }
 
-        // VẼ BẢNG NĂNG LỰC AI
         if (json.objectives?.aiCompetencies && json.objectives.aiCompetencies.length > 0) {
             html += `<p><strong>5. Năng lực AI tích hợp:</strong></p>`;
             html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;" border="1" cellpadding="5">`;
@@ -236,7 +223,6 @@ function renderPreview(json) {
             html += `</table>`;
         }
 
-       
         // II. THIẾT BỊ DẠY HỌC
         html += `<h3>II. THIẾT BỊ DẠY HỌC VÀ HỌC LIỆU</h3>`;
         if (json.equipment && json.equipment.length > 0) {
@@ -248,17 +234,14 @@ function renderPreview(json) {
             html += `</table>`;
         }
 
-        // III. TIẾN TRÌNH DẠY HỌC
+        // III. TIẾN TRÌNH DẠY HỌC (CẬP NHẬT HIỂN THỊ ĐÁNH GIÁ)
         html += `<h3>III. TIẾN TRÌNH DẠY HỌC</h3>`;
         (json.periods || []).forEach(period => {
-            // Chỉ in ra tên Tiết học nếu bài học có nhiều hơn 1 tiết và biến periods tồn tại
             if (json.periods && json.periods.length > 1) {
                 html += `<h3 style="color: var(--danger-color); margin-top: 20px; border-bottom: 2px solid var(--danger-color); padding-bottom: 5px;">${period.periodName}</h3>`;
             }
             
-            // Lặp qua các hoạt động bên trong tiết học đó
             (period.activities || []).forEach((act, index) => {
-                // Tự động chèn tiêu đề Hoạt động 2 nếu phát hiện Hoạt động 2.1
                 if (act?.name && act.name.includes("2.1")) {
                     html += `<h4 style="color: var(--primary-color); margin-top: 15px;">Hoạt động 2: Hình thành kiến thức mới</h4>`;
                 }
@@ -267,7 +250,19 @@ function renderPreview(json) {
                 html += `<p><strong>a) Mục tiêu:</strong> ${(act?.objectives || []).join("; ")}</p>`;
                 html += `<p><strong>b) Nội dung:</strong> ${act?.content || ""}</p>`;
                 html += `<p><strong>c) Sản phẩm:</strong> ${act?.products || ""}</p>`;
-                html += `<p><strong>d) Tổ chức thực hiện:</strong></p><ul>`;
+                
+                // HIỂN THỊ ĐÁNH GIÁ TRONG PREVIEW
+                if (act?.assessment) {
+                    html += `<p><strong>d) Đánh giá:</strong></p>`;
+                    html += `<ul style="margin-left: 20px;">`;
+                    html += `<li><strong>Phương pháp:</strong> ${act.assessment.method || ""}</li>`;
+                    html += `<li><strong>Công cụ:</strong> ${act.assessment.tool || ""}</li>`;
+                    html += `<li><strong>Tiêu chí:</strong> ${act.assessment.criteria || ""}</li>`;
+                    html += `<li><strong>Minh chứng:</strong> ${act.assessment.evidence || ""}</li>`;
+                    html += `</ul>`;
+                }
+
+                html += `<p><strong>e) Tổ chức thực hiện:</strong></p><ul>`;
                 html += `<li> ${act?.organization?.transfer || ""}</li>`;
                 html += `<li> ${act?.organization?.execute || ""}</li>`;
                 html += `<li> ${act?.organization?.report || ""}</li>`;
@@ -277,14 +272,12 @@ function renderPreview(json) {
         });
 
         // PHỤ LỤC
-
-        // PHỤ LỤC
         if (json.appendix && json.appendix.length > 0) {
             html += `<h3>PHỤ LỤC: PHIẾU HỌC TẬP VÀ ĐÁP ÁN</h3>`;
             json.appendix.forEach(app => {
                 html += `<h4>${app?.title || ""}</h4>`;
                 let content = app?.content || "";
-                html += `<p>${content.replace(/\n/g, '<br>')}</p>`; // Thay thế \n thành thẻ xuống dòng HTML
+                html += `<p>${content.replace(/\n/g, '<br>')}</p>`;
             });
         }
 

@@ -1,7 +1,5 @@
-// Biên dịch JSON thành File Word chuẩn 5512 và Form mẫu
-
-
-// Đã cập nhật Cỡ chữ 12pt & In đậm tiêu đề Phụ lục
+// ============================================================
+// docx-export.js - XUẤT KHBD RA FILE WORD CHUẨN CÔNG VĂN 5512
 // ============================================================
 
 async function exportWord() {
@@ -9,12 +7,10 @@ async function exportWord() {
 
     const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } = docx;
 
-    // Font size chuẩn: 12pt = 24 (half-points trong docx JS)
     const FONT_NAME = "Times New Roman";
-    const FONT_SIZE_BODY = 24; // 12pt
-    const FONT_SIZE_TITLE = 30; // 15pt
+    const FONT_SIZE_BODY = 12; 
+    const FONT_SIZE_TITLE = 15; 
 
-    // Hàm hỗ trợ tạo ô trong Bảng với cỡ chữ 12pt
     const createCell = (text, isBold = false) => {
         return new TableCell({
             children: [new Paragraph({
@@ -27,7 +23,6 @@ async function exportWord() {
     };
 
     let docChildren = [
-        // Tiêu đề bài học
         new Paragraph({
             children: [
                 new TextRun({ text: `CHỦ ĐỀ/BÀI: ${currentKHBD.lesson.title.toUpperCase()}`, bold: true, size: FONT_SIZE_TITLE, font: FONT_NAME })
@@ -71,7 +66,6 @@ async function exportWord() {
         ...(currentKHBD.objectives.qualities || []).map(q => new Paragraph({ children: [new TextRun({ text: `- ${q}`, size: FONT_SIZE_BODY, font: FONT_NAME })] }))
     ];
 
-    // Bảng Định hướng Năng lực số 
     if (currentKHBD.objectives.digitalCompetencies?.length > 0) {
         docChildren.push(new Paragraph({ children: [new TextRun({ text: "4. Định hướng năng lực số:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], spacing: { before: 200, after: 100 } }));
         docChildren.push(new Table({
@@ -85,7 +79,6 @@ async function exportWord() {
         }));
     }
 
-    // Bảng Năng lực AI
     if (currentKHBD.objectives.aiCompetencies?.length > 0) {
         docChildren.push(new Paragraph({ children: [new TextRun({ text: "5. Năng lực AI tích hợp (Quyết định 3439/QĐ-BGDĐT):", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })], spacing: { before: 200, after: 100 } }));
         docChildren.push(new Table({
@@ -113,7 +106,7 @@ async function exportWord() {
         }));
     }
 
-    // III. TIẾN TRÌNH DẠY HỌC
+    // III. TIẾN TRÌNH DẠY HỌC (CẬP NHẬT XUẤT ĐÁNH GIÁ SƯ PHẠM)
     docChildren.push(new Paragraph({ children: [new TextRun({ text: "III. TIẾN TRÌNH DẠY HỌC", bold: true, size: 26, font: FONT_NAME })], spacing: { before: 300, after: 100 } }));
     
     if (currentKHBD.periods) {
@@ -139,8 +132,15 @@ async function exportWord() {
                         new Paragraph({ children: [new TextRun({ text: "a) Mục tiêu: ", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME }), new TextRun({ text: (act.objectives || []).join("; "), size: FONT_SIZE_BODY, font: FONT_NAME })] }),
                         new Paragraph({ children: [new TextRun({ text: "b) Nội dung: ", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME }), new TextRun({ text: act.content || "", size: FONT_SIZE_BODY, font: FONT_NAME })] }),
                         new Paragraph({ children: [new TextRun({ text: "c) Sản phẩm: ", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME }), new TextRun({ text: act.products || "", size: FONT_SIZE_BODY, font: FONT_NAME })] }),
-                        new Paragraph({ children: [new TextRun({ text: "d) Tổ chức thực hiện:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })] }),
                         
+                        // XUẤT MỤC ĐÁNH GIÁ SƯ PHẠM
+                        new Paragraph({ children: [new TextRun({ text: "d) Đánh giá:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })] }),
+                        new Paragraph({ children: [new TextRun({ text: `- Phương pháp: ${act.assessment?.method || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
+                        new Paragraph({ children: [new TextRun({ text: `- Công cụ: ${act.assessment?.tool || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
+                        new Paragraph({ children: [new TextRun({ text: `- Tiêu chí: ${act.assessment?.criteria || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
+                        new Paragraph({ children: [new TextRun({ text: `- Minh chứng: ${act.assessment?.evidence || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 }, spacing: { after: 100 } }),
+
+                        new Paragraph({ children: [new TextRun({ text: "e) Tổ chức thực hiện:", bold: true, size: FONT_SIZE_BODY, font: FONT_NAME })] }),
                         new Paragraph({ children: [new TextRun({ text: `- ${act.organization?.transfer || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
                         new Paragraph({ children: [new TextRun({ text: `- ${act.organization?.execute || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
                         new Paragraph({ children: [new TextRun({ text: `- ${act.organization?.report || ""}`, size: FONT_SIZE_BODY, font: FONT_NAME })], indent: { left: 360 } }),
@@ -151,7 +151,7 @@ async function exportWord() {
         });
     }
 
-    // PHỤ LỤC (Xử lý cỡ chữ 12pt, In đậm mục lớn và giữ các dòng chấm)
+    // PHỤ LỤC
     if (currentKHBD.appendix?.length > 0) {
         docChildren.push(new Paragraph({ 
             children: [new TextRun({ text: "PHỤ LỤC: PHIẾU HỌC TẬP VÀ ĐÁP ÁN", bold: true, size: 26, font: FONT_NAME })], 
@@ -170,7 +170,6 @@ async function exportWord() {
             lines.forEach(line => {
                 let trimmed = line.trim();
                 if(trimmed !== "") {
-                    // Tự động kiểm tra tiêu đề mục lớn để IN ĐẬM (PHẦN I, PHẦN II, PHẦN III, HƯỚNG DẪN CHẤM...)
                     let isSectionHeader = /^(PHẦN\s+[I|V|X]+|HƯỚNG\s+DẪN\s+CHẤM|ĐÁP\s+ÁN)/i.test(trimmed);
 
                     docChildren.push(new Paragraph({ 
@@ -190,26 +189,21 @@ async function exportWord() {
     });
 }
 
-// Hàm xử lý loại bỏ dấu tiếng Việt và chuẩn hóa tên file xuất
 function getStandardFileName(lesson) {
-    // 1. Trích xuất số lớp (Ví dụ: "7", "Lớp 7" -> "7")
     const gradeNum = (lesson.grade || "7").replace(/[^0-9]/g, '') || "7";
     
-    // 2. Bỏ dấu tiếng Việt và các ký tự đặc biệt (dấu hai chấm, gạch ngang...)
     let cleanTitle = (lesson.title || "Bai Hoc")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/đ/g, "d").replace(/Đ/g, "D")
-        .replace(/[^a-zA-Z0-9\s]/g, " ") // Thay thế ký tự đặc biệt bằng khoảng trắng
+        .replace(/[^a-zA-Z0-9\s]/g, " ")
         .trim();
 
-    // 3. Viết hoa chữ cái đầu mỗi từ và xóa khoảng trắng thừa
     cleanTitle = cleanTitle
         .split(/\s+/)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(" ");
 
-    // 4. Viết liền dạng "Bai 1" -> "Bai1"
     cleanTitle = cleanTitle.replace(/Bai\s+(\d+)/i, "Bai$1");
 
     return `KHBD_Tin ${gradeNum}_${cleanTitle}.docx`;
