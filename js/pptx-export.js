@@ -1,6 +1,6 @@
 // ============================================================
-// pptx-export.js - XUẤT BÀI GIẢNG THÀNH POWERPOINT
-// Yêu cầu: PptxGenJS đã được nạp trong index.html
+// pptx-export.js - BỘ ĐIỀU HƯỚNG BỐ CỤC BÀI GIẢNG TRÌNH CHIẾU POWERPOINT
+// Yêu cầu: PptxGenJS nạp sẵn trong index.html
 // ============================================================
 
 const PRESENTATION_THEMES = {
@@ -81,7 +81,7 @@ function addPptxTitleBar(slide, pptx, title, typeLabel, theme) {
         color: theme.white, margin: 0, breakLine: false, fit: "shrink"
     });
     slide.addText(typeLabel || "", {
-        x: 11.15, y: 0.2, w: 1.55, h: 0.32,
+        x: 10.8, y: 0.2, w: 2.0, h: 0.32,
         fontFace: "Arial", fontSize: 10, bold: true,
         color: theme.title, align: "center", valign: "mid",
         fill: { color: theme.white, transparency: 4 },
@@ -151,130 +151,158 @@ function addVisualPlaceholder(slide, pptx, visual, theme) {
     }
 }
 
-function getPptxSlideTypeLabel(type) {
-    const labels = {
-        title: "MỞ ĐẦU",
-        objectives: "MỤC TIÊU",
-        warmup: "KHỞI ĐỘNG",
-        content: "KIẾN THỨC",
-        activity: "HOẠT ĐỘNG",
-        quiz: "CÂU HỎI NHANH",
-        practice: "LUYỆN TẬP",
-        application: "VẬN DỤNG",
-        summary: "TÓM TẮT",
-        mindmap: "SƠ ĐỒ TƯ DUY",
-        message: "THÔNG ĐIỆP"
-    };
-    return labels[type] || "BÀI GIẢNG";
+// ============================================================
+// CÁC BỐ CỤC SLIDE THÔNG MINH (SMART LAYOUTS)
+// ============================================================
+
+// 1. Title Slide
+function addTitlePptxSlide(slide, pptx, presentation, slideData, index, totalSlides, theme) {
+    slide.background = { color: theme.background };
+    slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.34, h: 7.5, fill: { color: theme.accent } });
+    slide.addText(slideData.title || presentation.title, {
+        x: 0.95, y: 1.35, w: 8.7, h: 1.55,
+        fontFace: "Arial", fontSize: 34, bold: true, color: theme.title, fit: "shrink"
+    });
+    slide.addText(presentation.subtitle || `Tin học ${presentation.grade || "THCS"}`, {
+        x: 0.98, y: 3.05, w: 7.4, h: 0.55,
+        fontFace: "Arial", fontSize: 20, color: theme.accent, fit: "shrink"
+    });
+    slide.addText(`${presentation.book || ""}  •  ${presentation.duration || ""}`, {
+        x: 0.98, y: 3.75, w: 7.4, h: 0.4,
+        fontFace: "Arial", fontSize: 14, color: theme.muted
+    });
+    slide.addShape(pptx.ShapeType.roundRect, {
+        x: 9.25, y: 1.22, w: 3.0, h: 4.35,
+        line: { color: theme.accent, width: 1.6 }, fill: { color: theme.accentSoft }
+    });
+    slide.addText(slideData.visual?.prompt || "Hình minh họa bài học", {
+        x: 9.58, y: 2.1, w: 2.34, h: 2.4,
+        fontFace: "Arial", fontSize: 18, color: theme.text, align: "center", valign: "mid"
+    });
+    addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
-function addInteractionBox(slide, pptx, interaction, theme) {
-    const question = interaction?.question || interaction?.instruction || "";
-    if (!question) return;
+// 2. Quiz Slide - Đồ họa 2x2 Grid Cards
+function addQuizPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
+    slide.background = { color: theme.background };
+    addPptxTitleBar(slide, pptx, slideData.title, "CÂU HỎI TRẮC NGHIỆM", theme);
 
     slide.addShape(pptx.ShapeType.roundRect, {
-        x: 0.75, y: 5.72, w: 7.55, h: 1.05,
-        line: { color: theme.accent, width: 1.2 },
-        fill: { color: theme.accentSoft, transparency: 4 }
+        x: 0.8, y: 1.1, w: 11.7, h: 1.3,
+        fill: { color: theme.accentSoft },
+        line: { color: theme.accent, width: 1.5 },
+        rectRadius: 0.1
     });
-    slide.addText(question, {
-        x: 1.0, y: 5.9, w: 7.05, h: 0.65,
-        fontFace: "Arial", fontSize: 16, bold: true,
-        color: theme.title, align: "center", valign: "mid",
-        margin: 0.04, fit: "shrink"
+    slide.addText(slideData.interaction?.question || slideData.title, {
+        x: 1.0, y: 1.2, w: 11.3, h: 1.1,
+        fontFace: "Arial", fontSize: 18, bold: true, color: theme.title, align: "center", valign: "mid"
     });
+
+    const options = slideData.interaction?.options || [];
+    const positions = [
+        { x: 0.8, y: 2.7 }, { x: 6.8, y: 2.7 },
+        { x: 0.8, y: 4.4 }, { x: 6.8, y: 4.4 }
+    ];
+
+    options.slice(0, 4).forEach((opt, idx) => {
+        const pos = positions[idx];
+        slide.addShape(pptx.ShapeType.roundRect, {
+            x: pos.x, y: pos.y, w: 5.7, h: 1.4,
+            fill: { color: theme.white },
+            line: { color: theme.accent, width: 1 },
+            rectRadius: 0.08
+        });
+        slide.addText(opt, {
+            x: pos.x + 0.2, y: pos.y + 0.1, w: 5.3, h: 1.2,
+            fontFace: "Arial", fontSize: 15, color: theme.text, valign: "mid"
+        });
+    });
+
+    addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
+// 3. Comparison Slide - 2 Cột song song
+function addComparisonPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
+    slide.background = { color: theme.background };
+    addPptxTitleBar(slide, pptx, slideData.title, "SO SÁNH", theme);
+
+    const mid = Math.ceil((slideData.content || []).length / 2);
+    const leftItems = slideData.content.slice(0, mid);
+    const rightItems = slideData.content.slice(mid);
+
+    slide.addShape(pptx.ShapeType.roundRect, { x: 0.8, y: 1.2, w: 5.6, h: 5.2, fill: { color: theme.white }, line: { color: theme.accent } });
+    addPptxBullets(slide, leftItems, { x: 1.0, y: 1.4, w: 5.2, h: 4.8 }, theme);
+
+    slide.addShape(pptx.ShapeType.roundRect, { x: 6.9, y: 1.2, w: 5.6, h: 5.2, fill: { color: theme.accentSoft }, line: { color: theme.accent } });
+    addPptxBullets(slide, rightItems, { x: 7.1, y: 1.4, w: 5.2, h: 4.8 }, theme);
+
+    addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
+}
+
+// 4. Big Stat / Definition Slide - Khắc sâu điểm nhấn
+function addBigStatPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
+    slide.background = { color: theme.background };
+    addPptxTitleBar(slide, pptx, slideData.title, "GHI NHỚ TRỌNG TÂM", theme);
+
+    slide.addShape(pptx.ShapeType.roundRect, {
+        x: 1.5, y: 1.5, w: 10.3, h: 4.5,
+        fill: { color: theme.accentSoft }, line: { color: theme.accent, width: 2 }
+    });
+
+    const mainText = slideData.content.join("\n") || slideData.learningGoal || "";
+    slide.addText(mainText, {
+        x: 1.8, y: 1.8, w: 9.7, h: 3.9,
+        fontFace: "Arial", fontSize: 26, bold: true, color: theme.title, align: "center", valign: "mid"
+    });
+
+    addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
+}
+
+// 5. Standard Content Slide
 function addStandardPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
     slide.background = { color: theme.background };
-    addPptxTitleBar(slide, pptx, slideData.title, getPptxSlideTypeLabel(slideData.type), theme);
+    addPptxTitleBar(slide, pptx, slideData.title, "NỘI DUNG", theme);
 
     slide.addShape(pptx.ShapeType.roundRect, {
         x: 0.62, y: 1.12, w: 7.95, h: 4.45,
         line: { color: theme.accent, transparency: 75, width: 1 },
-        fill: { color: theme.background, transparency: 0 }
-    });
-
-    addPptxBullets(slide, slideData.content, {
-        x: 0.93, y: 1.38, w: 7.35, h: 3.92
-    }, theme);
-
-    addVisualPlaceholder(slide, pptx, slideData.visual, theme);
-    addInteractionBox(slide, pptx, slideData.interaction, theme);
-    addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
-}
-
-function addTitlePptxSlide(slide, pptx, presentation, slideData, index, totalSlides, theme) {
-    slide.background = { color: theme.background };
-    slide.addShape(pptx.ShapeType.rect, {
-        x: 0, y: 0, w: 13.333, h: 7.5,
-        line: { color: theme.background, transparency: 100 },
         fill: { color: theme.background }
     });
-    slide.addShape(pptx.ShapeType.rect, {
-        x: 0, y: 0, w: 0.34, h: 7.5,
-        line: { color: theme.accent, transparency: 100 },
-        fill: { color: theme.accent }
-    });
-    slide.addText(slideData.title || presentation.title, {
-        x: 0.95, y: 1.35, w: 8.7, h: 1.55,
-        fontFace: "Arial", fontSize: 34, bold: true,
-        color: theme.title, margin: 0, fit: "shrink"
-    });
-    slide.addText(presentation.subtitle || `Tin học ${presentation.grade || "THCS"}`, {
-        x: 0.98, y: 3.05, w: 7.4, h: 0.55,
-        fontFace: "Arial", fontSize: 20,
-        color: theme.accent, margin: 0, fit: "shrink"
-    });
-    slide.addText(`${presentation.book || ""}  •  ${presentation.duration || ""}`, {
-        x: 0.98, y: 3.75, w: 7.4, h: 0.4,
-        fontFace: "Arial", fontSize: 14,
-        color: theme.muted, margin: 0
-    });
 
-    slide.addShape(pptx.ShapeType.roundRect, {
-        x: 9.25, y: 1.22, w: 3.0, h: 4.35,
-        line: { color: theme.accent, width: 1.6 },
-        fill: { color: theme.accentSoft }
-    });
-    slide.addText(slideData.visual?.prompt || "Hình minh họa chủ đề bài học", {
-        x: 9.58, y: 2.1, w: 2.34, h: 2.4,
-        fontFace: "Arial", fontSize: 18,
-        color: theme.text, align: "center", valign: "mid",
-        margin: 0.06, fit: "shrink"
-    });
+    addPptxBullets(slide, slideData.content, { x: 0.93, y: 1.38, w: 7.35, h: 3.92 }, theme);
+    addVisualPlaceholder(slide, pptx, slideData.visual, theme);
     addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
-function addMessagePptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
-    slide.background = { color: theme.background };
-    slide.addShape(pptx.ShapeType.roundRect, {
-        x: 1.25, y: 1.18, w: 10.8, h: 4.85,
-        line: { color: theme.accent, width: 2 },
-        fill: { color: theme.accentSoft, transparency: 5 }
-    });
-    slide.addText(slideData.title || "Thông điệp", {
-        x: 2.0, y: 1.68, w: 9.3, h: 0.7,
-        fontFace: "Arial", fontSize: 30, bold: true,
-        color: theme.title, align: "center", margin: 0, fit: "shrink"
-    });
-    slide.addText((slideData.content || []).join("\n"), {
-        x: 2.05, y: 2.65, w: 9.2, h: 2.25,
-        fontFace: "Arial", fontSize: 24,
-        color: theme.text, align: "center", valign: "mid",
-        margin: 0.12, breakLine: false, fit: "shrink"
-    });
-    addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
+// ============================================================
+// BỘ ĐIỀU PHỐI LAYOUT THÔNG MINH (SMART DISPATCHER)
+// ============================================================
+
+function renderSmartSlide(slide, pptx, presentation, slideData, index, totalSlides, theme) {
+    switch (slideData.type) {
+        case "title":
+            addTitlePptxSlide(slide, pptx, presentation, slideData, index, totalSlides, theme);
+            break;
+        case "quiz":
+            addQuizPptxSlide(slide, pptx, slideData, index, totalSlides, theme);
+            break;
+        case "comparison":
+            addComparisonPptxSlide(slide, pptx, slideData, index, totalSlides, theme);
+            break;
+        case "big_stat":
+            addBigStatPptxSlide(slide, pptx, slideData, index, totalSlides, theme);
+            break;
+        default:
+            addStandardPptxSlide(slide, pptx, slideData, index, totalSlides, theme);
+    }
 }
 
 function buildSpeakerNotes(slideData) {
     const notes = [
         slideData.learningGoal ? `Mục tiêu trang: ${slideData.learningGoal}` : "",
         slideData.interaction?.instruction ? `Cách tổ chức: ${slideData.interaction.instruction}` : "",
-        slideData.interaction?.answer ? `Đáp án/kết quả mong đợi: ${slideData.interaction.answer}` : "",
-        slideData.teacherNotes ? `Ghi chú giáo viên: ${slideData.teacherNotes}` : "",
-        slideData.transition ? `Chuyển tiếp: ${slideData.transition}` : "",
-        slideData.visual?.prompt ? `Gợi ý hình ảnh: ${slideData.visual.prompt}` : ""
+        slideData.interaction?.answer ? `Đáp án/kết quả: ${slideData.interaction.answer}` : "",
+        slideData.teacherNotes ? `Ghi chú GV: ${slideData.teacherNotes}` : ""
     ].filter(Boolean);
     return notes.join("\n\n");
 }
@@ -282,56 +310,32 @@ function buildSpeakerNotes(slideData) {
 async function exportPresentationPptx() {
     const data = typeof getCurrentPresentation === "function" ? getCurrentPresentation() : null;
     if (!data?.slides?.length) {
-        if (typeof showSlidesMessage === "function") {
-            showSlidesMessage("Chưa có bài giảng để xuất PowerPoint.", "error");
-        } else {
-            alert("Chưa có bài giảng để xuất PowerPoint.");
-        }
+        alert("Chưa có bài giảng để xuất PowerPoint.");
         return;
     }
 
-    const PptxConstructor = typeof pptxgen !== "undefined"
-        ? pptxgen
-        : (typeof PptxGenJS !== "undefined" ? PptxGenJS : null);
-
-    if (!PptxConstructor) {
-        throw new Error("Chưa tải được thư viện PptxGenJS. Hãy kiểm tra kết nối Internet.");
-    }
+    const PptxConstructor = typeof pptxgen !== "undefined" ? pptxgen : (typeof PptxGenJS !== "undefined" ? PptxGenJS : null);
+    if (!PptxConstructor) throw new Error("Chưa tải được thư viện PptxGenJS.");
 
     const button = document.getElementById("btn-export-pptx");
     if (button) {
         button.disabled = true;
-        button.textContent = "⏳ Đang tạo PowerPoint...";
+        button.textContent = "⏳ Đang xuất file...";
     }
 
     try {
         const pptx = new PptxConstructor();
         pptx.layout = "LAYOUT_WIDE";
         pptx.author = "AI Tin THCS";
-        pptx.company = "Giáo viên THCS";
-        pptx.subject = data.presentation?.overview || "Bài giảng trình chiếu";
         pptx.title = data.presentation?.title || "Bài giảng";
-        pptx.lang = "vi-VN";
-        pptx.theme = {
-            headFontFace: "Arial",
-            bodyFontFace: "Arial",
-            lang: "vi-VN"
-        };
 
         const theme = getPresentationTheme(data.presentation?.theme);
         const totalSlides = data.slides.length;
 
         data.slides.forEach((slideData, index) => {
             const slide = pptx.addSlide();
-
-            if (slideData.type === "title") {
-                addTitlePptxSlide(slide, pptx, data.presentation, slideData, index, totalSlides, theme);
-            } else if (slideData.type === "message") {
-                addMessagePptxSlide(slide, pptx, slideData, index, totalSlides, theme);
-            } else {
-                addStandardPptxSlide(slide, pptx, slideData, index, totalSlides, theme);
-            }
-
+            renderSmartSlide(slide, pptx, data.presentation, slideData, index, totalSlides, theme);
+            
             const notes = buildSpeakerNotes(slideData);
             if (notes && typeof slide.addNotes === "function") {
                 slide.addNotes(notes);
@@ -340,16 +344,9 @@ async function exportPresentationPptx() {
 
         const fileName = `${sanitizePresentationFileName(data.presentation?.title)}.pptx`;
         await pptx.writeFile({ fileName });
-        if (typeof showSlidesMessage === "function") {
-            showSlidesMessage(`Đã xuất tệp ${fileName}.`, "success");
-        }
     } catch (error) {
         console.error("PPTX export error:", error);
-        if (typeof showSlidesMessage === "function") {
-            showSlidesMessage(`Không thể xuất PowerPoint: ${error.message}`, "error");
-        } else {
-            alert(`Không thể xuất PowerPoint: ${error.message}`);
-        }
+        alert(`Không thể xuất PowerPoint: ${error.message}`);
     } finally {
         if (button) {
             button.disabled = false;

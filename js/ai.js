@@ -1,5 +1,5 @@
 // ============================================================
-// ai.js - AI ENGINE HOÀN CHỈNH (KHBD & PRESENTATION BUILDER)
+// ai.js - AI ENGINE HOÀN CHỈNH (KHBD & SMART PRESENTATION BUILDER)
 // ============================================================
 
 // ============================================================
@@ -53,7 +53,7 @@ NGUYÊN TẮC BẮT BUỘC
 `;
 
 // ============================================================
-// 2. JSON SCHEMA KHBD (CẬP NHẬT ĐÁNH GIÁ & PHỤ LỤC)
+// 2. JSON SCHEMA KHBD
 // ============================================================
 
 const KHBD_SCHEMA = {
@@ -200,7 +200,7 @@ function getProvider() {
 }
 
 // ============================================================
-// 4. CÁC HÀM GỌI API CHO KHBD (GEMINI / OPENAI / OPENROUTER)
+// 4. CÁC HÀM GỌI API CHO KHBD
 // ============================================================
 
 async function callGemini(apiKey, prompt) {
@@ -332,25 +332,27 @@ async function callAI(context, requestData) {
 }
 
 // ============================================================
-// 5. TÍNH NĂNG TẠO BÀI GIẢNG TRÌNH CHIẾU (SLIDES ENGINE)
+// 5. TÍNH NĂNG TẠO BÀI GIẢNG TRÌNH CHIẾU TỰ ĐỘNG LỰA CHỌN BỐ CỤC
 // ============================================================
 
 const PRESENTATION_SYSTEM_PROMPT = `
 Bạn là chuyên gia thiết kế bài giảng trình chiếu môn Tin học THCS tại Việt Nam.
 
-Nhiệm vụ của bạn là chuyển nội dung SGK, sách giáo viên hoặc KHBD thành một kịch bản trình chiếu rõ ràng, trực quan và có thể dạy ngay.
+Nhiệm vụ của bạn là phân tích nội dung SGK, KHBD và tự động lựa chọn BỐ CỤC TRÌNH CHIẾU CHIẾN LƯỢC phù hợp cho từng trang.
 
-NGUYÊN TẮC BẮT BUỘC:
-1. Ưu tiên tuyệt đối CONTEXT do giáo viên cung cấp; không tự nhận nội dung là nguyên văn SGK khi CONTEXT không đủ.
-2. Nội dung phù hợp học sinh THCS, ngắn gọn, mỗi trang chỉ tập trung một ý chính.
-3. Không sao chép các đoạn văn dài từ SGK. Phải diễn giải thành gạch đầu dòng, câu hỏi, nhiệm vụ hoặc sơ đồ.
-4. Bài giảng phải có tiến trình hợp lí: mở đầu, mục tiêu, hình thành kiến thức, hoạt động tương tác, luyện tập, vận dụng, củng cố.
-5. Với bài thực hành trong phòng máy, ưu tiên nhiệm vụ thao tác và sản phẩm quan sát được.
-6. Mỗi trang phải có thời lượng dự kiến, mục tiêu, gợi ý hình ảnh và ghi chú dành cho giáo viên.
-7. Khi CONTEXT có mã hình, tên hình hoặc số trang SGK thì phải ghi chính xác. Nếu không có, chỉ viết gợi ý hình minh họa, không bịa số hình hoặc số trang.
-8. Câu hỏi trắc nghiệm phải có đáp án; đáp án chỉ đưa vào trường answer hoặc teacherNotes, không đưa lộ ngay trong nội dung trình chiếu.
-9. Nội dung trên trang không quá 6 gạch đầu dòng; mỗi gạch đầu dòng ưu tiên dưới 18 từ.
-10. Chỉ trả về JSON hợp lệ theo schema. Không Markdown, không lời dẫn ngoài JSON.
+NGUYÊN TẮC PHÂN BỔ BỐ CỤC (FIELD "type"):
+- "title": Trang tiêu đề chính của bài học.
+- "content": Dạng danh sách kiến thức thông thường.
+- "comparison": Khi nội dung so sánh 2 đối tượng, ưu/nhược điểm, phân biệt khái niệm (Mạng wired vs wireless, RAM vs ROM,...).
+- "big_stat": Khi có định nghĩa trọng tâm, công thức quan trọng, hoặc thông điệp chốt cần khắc sâu.
+- "quiz": Trang câu hỏi trắc nghiệm (bắt buộc phân chia 4 phương án A, B, C, D vào mảng options).
+- "timeline": Khi mô tả quy trình thực hành phòng máy, thuật toán từng bước (Bước 1, Bước 2,...).
+- "message": Trang tổng kết, dặn dò hoặc thông điệp bài học.
+
+QUY TẮC NỘI DUNG:
+1. Mỗi trang tập trung 1 ý chính, không quá 6 gạch đầu dòng.
+2. Trang quiz phải có câu hỏi trong field "question", 4 lựa chọn trong "options", và đáp án đúng trong "answer".
+3. Trả về đúng JSON theo Schema, không viết Markdown.
 `;
 
 const PRESENTATION_SCHEMA = {
@@ -377,7 +379,7 @@ const PRESENTATION_SCHEMA = {
                     id: { type: "string" },
                     type: {
                         type: "string",
-                        enum: ["title", "objectives", "warmup", "content", "activity", "quiz", "practice", "application", "summary", "mindmap", "message"]
+                        enum: ["title", "objectives", "warmup", "content", "comparison", "big_stat", "timeline", "activity", "quiz", "practice", "application", "summary", "mindmap", "message"]
                     },
                     title: { type: "string" },
                     minutes: { type: "number" },
@@ -448,7 +450,7 @@ ${safeContext}
 ============================================================
 NHIỆM VỤ
 ============================================================
-Tạo kịch bản bài giảng trình chiếu hoàn chỉnh, xuất trực tiếp thành PowerPoint.
+Hãy tạo kịch bản bài giảng trình chiếu đa dạng bố cục (so sánh, từ khóa ghi nhớ, câu hỏi trắc nghiệm dạng thẻ card, tiến trình các bước thực hành).
 
 Chỉ trả về JSON đúng schema, không Markdown.
 `;
