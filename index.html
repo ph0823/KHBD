@@ -6,6 +6,7 @@
     <!-- Tạo lần đầu lúc 10h ngày 10-08-2026, Cập nhật giao diện Grid 16-08-->
     <title>AI Tạo KHBD Tin</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="slides-style.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     
     <!-- Các thư viện hỗ trợ (JS Libraries) -->
@@ -15,6 +16,7 @@
     <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 <body>
     <header>
@@ -23,6 +25,7 @@
             <button id="nav-config">Cài đặt API</button>
             <button id="nav-docs">Kho Tài liệu</button>
             <button id="nav-create">Tạo KHBD</button>
+            <button id="nav-slides">Tạo bài giảng</button>
         </nav>
     </header>
 
@@ -120,7 +123,120 @@
 
         </section>
 
-        <!-- Màn hình 3: Kho Tài liệu -->
+
+        <!-- Màn hình 3: Tạo bài giảng trình chiếu -->
+        <section id="sec-slides" style="display:none;">
+            <div class="slides-heading">
+                <div>
+                    <h2>Tạo bài giảng trình chiếu bằng AI</h2>
+                    <p class="description">AI tra cứu SGK trong Kho tài liệu, xây dựng kịch bản theo thời lượng và xuất tệp PowerPoint.</p>
+                </div>
+                <span class="feature-badge">PPTX</span>
+            </div>
+
+            <div class="form-grid slides-form-grid">
+                <div class="form-group">
+                    <label for="slide-grade">Lớp:</label>
+                    <select id="slide-grade">
+                        <option value="6">6</option>
+                        <option value="7" selected>7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="slide-book">Bộ sách:</label>
+                    <select id="slide-book">
+                        <option selected>Kết nối tri thức</option>
+                        <option>Cánh Diều</option>
+                        <option>Chân trời sáng tạo</option>
+                    </select>
+                </div>
+
+                <div class="form-group slide-wide-field">
+                    <label for="slide-lesson-name">Tên bài dạy:</label>
+                    <select id="slide-lesson-name"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="slide-duration">Thời lượng:</label>
+                    <select id="slide-duration">
+                        <option value="1 tiết">1 tiết</option>
+                        <option value="2 tiết" selected>2 tiết</option>
+                        <option value="3 tiết">3 tiết</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="slide-count">Số trang chiếu:</label>
+                    <select id="slide-count">
+                        <option value="auto" selected>Tự động theo thời lượng</option>
+                        <option value="10">Khoảng 10 trang</option>
+                        <option value="12">Khoảng 12 trang</option>
+                        <option value="15">Khoảng 15 trang</option>
+                        <option value="20">Khoảng 20 trang</option>
+                        <option value="24">Khoảng 24 trang</option>
+                        <option value="30">Khoảng 30 trang</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="slide-source">Nguồn nội dung:</label>
+                    <select id="slide-source">
+                        <option value="combined" selected>SGK + KHBD vừa tạo</option>
+                        <option value="sgk">Chỉ SGK trong kho</option>
+                        <option value="khbd">Chỉ KHBD vừa tạo</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="slide-theme">Phong cách thiết kế:</label>
+                    <select id="slide-theme">
+                        <option value="education" selected>Giáo dục hiện đại</option>
+                        <option value="playful">Vui nhộn, sinh động</option>
+                        <option value="minimal">Tối giản, dễ đọc</option>
+                        <option value="dark">Công nghệ nền tối</option>
+                    </select>
+                </div>
+
+                <div class="form-group slide-wide-field">
+                    <label for="slide-extra">Yêu cầu bổ sung:</label>
+                    <textarea id="slide-extra" rows="3" placeholder="Ví dụ: có trò chơi nhìn hình đoán chữ, câu hỏi nhanh, hoạt động nhóm, sơ đồ tư duy cuối bài..."></textarea>
+                </div>
+            </div>
+
+            <div class="slides-actions">
+                <button id="btn-generate-slides" type="button" onclick="generatePresentation()">✨ AI tạo bài giảng</button>
+                <button id="btn-add-slide" class="secondary-btn" type="button" onclick="addBlankSlide()" disabled>＋ Thêm trang</button>
+                <button id="btn-export-pptx" class="success-btn" type="button" onclick="exportPresentationPptx()" disabled>⬇️ Xuất PowerPoint</button>
+            </div>
+
+            <div id="slides-loading" class="slides-loading" style="display:none;">
+                <strong>AI đang phân tích SGK và xây dựng bài giảng...</strong>
+                <span>⏱️ <span id="slides-timer">00:00</span></span>
+            </div>
+
+            <div id="slides-message" class="slides-message" style="display:none;"></div>
+
+            <details class="prompt-details">
+                <summary>Xem prompt nội dung gửi cho AI</summary>
+                <textarea id="slide-prompt-preview" rows="10" readonly placeholder="Prompt sẽ xuất hiện sau khi nhấn tạo bài giảng."></textarea>
+            </details>
+
+            <div id="slides-result" style="display:none;">
+                <div class="presentation-toolbar">
+                    <div>
+                        <h3 id="presentation-preview-title">Bản xem trước bài giảng</h3>
+                        <p id="presentation-summary"></p>
+                    </div>
+                    <button type="button" class="secondary-btn" onclick="savePresentationDraft()">💾 Lưu bản nháp</button>
+                </div>
+                <div id="slides-preview" class="slides-preview"></div>
+            </div>
+        </section>
+
+        <!-- Màn hình 4: Kho Tài liệu -->
         <section id="sec-docs" style="display:none;">
             <h2>Kho Tài liệu SGK & Tài liệu Giảng dạy</h2>
             <p class="description" style="margin-bottom: 15px; color: #555;">
@@ -158,6 +274,8 @@
     <script src="js/ai.js"></script>
     <script src="js/validator.js"></script>
     <script src="js/docx-export.js"></script>
+    <script src="js/pptx-export.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/slides.js"></script>
 </body>
 </html>
