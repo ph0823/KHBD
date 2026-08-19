@@ -1,19 +1,28 @@
 // ============================================================
-// canva-integration.js - TỰ ĐỘNG XUẤT ĐÚNG ĐỊNH DẠNG VÀ ĐẨY DỮ LIỆU SANG CANVA AI
+// canva-integration.js - SỬA LỖI MỞ URL CANVA VÀ XUẤT CSV TẠO HÀNG LOẠT
 // ============================================================
 
 /**
- * 1. Xuất tệp CSV tương thích hoàn toàn với Canva "Tạo hàng loạt" (Bulk Create)
+ * 1. Mở chính xác giao diện thiết kế bài giảng của Canva[cite: 26]
+ */
+function openCanvaAIPresentation() {
+    // Sửa URL mở trực tiếp mẫu Presentation trên Canva[cite: 26]
+    const canvaDirectUrl = "https://www.canva.com/presentations/templates/";
+    window.open(canvaDirectUrl, "_blank");
+}
+
+/**
+ * 2. Tự động đóng gói nội dung slide thành CSV tương thích với Canva Bulk Create
  */
 function exportCanvaBulkCSV() {
     const data = typeof getCurrentPresentation === "function" ? getCurrentPresentation() : null;
     if (!data?.slides?.length) {
-        alert("Chưa có bài giảng để đẩy sang Canva.");
+        alert("Chưa có bài giảng để xuất sang Canva.");
         return;
     }
 
-    // Tiêu đề các biến khớp với khung Placeholder thiết kế của Canva
-    let csvContent = "\uFEFFSlide_Number,Slide_Title,Slide_Content,Question,Options,Answer,Visual_Prompt\n";
+    // Tiêu đề cột dùng cho Canva Bulk Create
+    let csvContent = "\uFEFFSlide_Number,Slide_Title,Slide_Content,Question,Options,Answer,SGK_Source\n";
 
     data.slides.forEach((slide, index) => {
         const slideNum = index + 1;
@@ -22,25 +31,16 @@ function exportCanvaBulkCSV() {
         const question = `"${(slide.interaction?.question || "").replace(/"/g, '""')}"`;
         const options = `"${(slide.interaction?.options || []).join(" | ").replace(/"/g, '""')}"`;
         const answer = `"${(slide.interaction?.answer || "").replace(/"/g, '""')}"`;
-        const visual = `"${(slide.visual?.prompt || "").replace(/"/g, '""')}"`;
+        const citation = `"${(slide.sgkCitation || "").replace(/"/g, '""')}"`;
 
-        csvContent += `${slideNum},${title},${content},${question},${options},${answer},${visual}\n`;
+        csvContent += `${slideNum},${title},${content},${question},${options},${answer},${citation}\n`;
     });
 
-    // Tải tệp CSV về máy
+    // Tạo file CSV và tải về máy
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const fileName = `Canva_Bulk_${sanitizePresentationFileName(data.presentation?.title)}.csv`;
+    const fileName = `Canva_Data_${sanitizePresentationFileName(data.presentation?.title)}.csv`;
     saveAs(blob, fileName);
 
-    // Mở ngay công cụ Canva AI Presentation
+    // Mở trang Canva
     openCanvaAIPresentation();
-}
-
-/**
- * 2. Tự động mở Canva AI Magic Design cho Bài giảng
- */
-function openCanvaAIPresentation() {
-    // URL trực tiếp mở trình tạo bài giảng tự động của Canva
-    const canvaIntentUrl = "[https://www.canva.com/create/presentations/](https://www.canva.com/create/presentations/)";
-    window.open(canvaIntentUrl, "_blank");
 }

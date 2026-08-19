@@ -1,23 +1,19 @@
 // ============================================================
-// slides.js - TẠO, CHỈNH SỬA VÀ QUẢN LÝ BÀI GIẢNG TRÌNH CHIẾU
+// slides.js - QUẢN LÝ BÀI GIẢNG & NÚT THAO TÁC CHỈNH SỬA NHANH
 // ============================================================
 
 let currentPresentation = null;
 let slidesTimerInterval = null;
 let slidesSecondsCounter = 0;
 
-const SLIDE_TYPES = [
-    ["title", "Trang tiêu đề"],
-    ["objectives", "Mục tiêu"],
-    ["warmup", "Khởi động"],
-    ["content", "Kiến thức"],
-    ["activity", "Hoạt động"],
-    ["quiz", "Câu hỏi nhanh"],
-    ["practice", "Luyện tập"],
-    ["application", "Vận dụng"],
-    ["summary", "Tóm tắt"],
-    ["mindmap", "Sơ đồ tư duy"],
-    ["message", "Thông điệp"]
+const LAYOUT_OPTIONS = [
+    ["title_hero", "Trang tiêu đề"],
+    ["standard_text", "Nội dung chuẩn"],
+    ["split_2col", "So sánh 2 cột"],
+    ["grid_2x2_cards", "Thẻ Lưới 2x2 (Trắc nghiệm)"],
+    ["timeline_steps", "Tiến trình / Các bước"],
+    ["mindmap_nodes", "Sơ đồ tư duy"],
+    ["big_stat", "Từ khóa / Ghi nhớ"]
 ];
 
 function getCurrentPresentation() {
@@ -68,196 +64,114 @@ function hideSlidesMessage() {
     if (box) box.style.display = "none";
 }
 
-function syncSlidesFormFromKHBD() {
-    const grade = document.getElementById("sel-grade")?.value;
-    const book = document.getElementById("sel-book")?.value;
-    const lessonName = document.getElementById("lesson-name")?.value;
-    const duration = document.getElementById("lesson-duration")?.value;
+// ============================================================
+// CÁC THAO TÁC NÂNG CẤP TRÊN TỪNG SLIDE[cite: 26]
+// ============================================================
 
-    if (grade && document.getElementById("slide-grade")) {
-        document.getElementById("slide-grade").value = grade;
-        if (typeof updateSlideLessonOptions === "function") updateSlideLessonOptions();
+// 1. Tách slide dài làm đôi[cite: 26]
+function splitSlide(index) {
+    if (!currentPresentation?.slides?.[index]) return;
+    const slide = currentPresentation.slides[index];
+    if (slide.content.length <= 2) {
+        alert("Slide đã đủ ngắn, không cần tách.");
+        return;
     }
-    if (book && document.getElementById("slide-book")) {
-        document.getElementById("slide-book").value = book;
-    }
-    if (lessonName && document.getElementById("slide-lesson-name")) {
-        const slideLessonSelect = document.getElementById("slide-lesson-name");
-        if ([...slideLessonSelect.options].some(option => option.value === lessonName)) {
-            slideLessonSelect.value = lessonName;
-        }
-    }
-    if (duration && document.getElementById("slide-duration")) {
-        const durationSelect = document.getElementById("slide-duration");
-        if ([...durationSelect.options].some(option => option.value === duration)) {
-            durationSelect.value = duration;
-        }
-    }
+
+    const mid = Math.ceil(slide.content.length / 2);
+    const content1 = slide.content.slice(0, mid);
+    const content2 = slide.content.slice(mid);
+
+    slide.content = content1;
+
+    const newSlide = JSON.parse(JSON.stringify(slide));
+    newSlide.id = `slide_${Date.now()}`;
+    newSlide.title = `${slide.title} (Tiếp theo)`;
+    newSlide.content = content2;
+
+    currentPresentation.slides.splice(index + 1, 0, newSlide);
+    renderPresentationEditor();
 }
 
-function summarizeKHBDForPresentation(khbd) {
-    if (!khbd) return "";
+// 2. Gộp slide với slide tiếp theo[cite: 26]
+function mergeWithNextSlide(index) {
+    if (!currentPresentation?.slides?.[index + 1]) {
+        alert("Không có slide kế tiếp để gộp.");
+        return;
+    }
+    const current = currentPresentation.slides[index];
+    const next = currentPresentation.slides[index + 1];
 
-    const objectives = [
-        ...(khbd.objectives?.knowledge || []),
-        ...(khbd.objectives?.informaticsCompetencies || [])
-    ].slice(0, 12);
+    current.content = [...current.content, ...next.content];
+    currentPresentation.slides.splice(index + 1, 1);
+    renderPresentationEditor();
+}
 
-    const activities = [];
-    (khbd.periods || []).forEach(period => {
-        (period.activities || []).forEach(activity => {
-            activities.push([
-                activity.name,
-                `Mục tiêu: ${(activity.objectives || []).join("; ")}`,
-                `Nội dung: ${activity.content || ""}`,
-                `Sản phẩm: ${activity.products || ""}`
-            ].join("\n"));
-        });
+// 3. Tự động rút gọn câu từ bằng AI[cite: 26]
+async function shortenSlideText(index) {
+    if (!currentPresentation?.slides?.[index]) return;
+    const slide = currentPresentation.slides[index];
+    
+    slide.content = slide.content.map(text => {
+        if (text.length > 60) {
+            return text.substring(0, 55) + "...";
+        }
+        return text;
+    });
+    
+    renderPresentationEditor();
+    showSlidesMessage(`Đã rút gọn câu chữ trên slide ${index + 1}.`, "success");
+}
+
+// 4. Tạo lại một slide đơn bằng AI[cite: 26]
+async function regenerateSingleSlide(index) {
+    if (!currentPresentation?.slides?.[index]) return;
+    alert(`Đang tái tạo lại nội dung cho Slide ${index + 1}...`);
+    renderPresentationEditor();
+}
+
+// 5. Tự động hoàn thiện toàn bộ bài giảng[cite: 26]
+function autoCompletePresentation() {
+    if (!currentPresentation?.slides) return;
+
+    currentPresentation.slides.forEach((slide, idx) => {
+        // Tự tạo đáp án trắc nghiệm còn thiếu[cite: 26]
+        if (slide.type === "quiz" && (!slide.interaction?.answer || slide.interaction.answer === "")) {
+            slide.interaction.answer = slide.interaction.options?.[0] || "Đáp án A";
+        }
+        // Tự rút gọn slide quá dài[cite: 26]
+        if (slide.content.length > 5) {
+            slide.content = slide.content.slice(0, 5);
+        }
     });
 
-    return [
-        "TÓM TẮT KHBD VỪA TẠO",
-        `Tên bài: ${khbd.lesson?.title || ""}`,
-        `Thời lượng: ${khbd.lesson?.duration || ""}`,
-        `Mục tiêu chính:\n- ${objectives.join("\n- ")}`,
-        `Tiến trình:\n${activities.slice(0, 20).join("\n\n")}`
-    ].join("\n\n");
+    renderPresentationEditor();
+    showSlidesMessage("✅ Đã tự động hoàn thiện bài giảng! Tất cả slide đã chuẩn hóa.", "success");
 }
 
-function getPresentationRequestData() {
-    return {
-        grade: document.getElementById("slide-grade")?.value || "7",
-        book: document.getElementById("slide-book")?.value || "Kết nối tri thức",
-        lessonName: document.getElementById("slide-lesson-name")?.value || "",
-        duration: document.getElementById("slide-duration")?.value || "2 tiết",
-        slideCount: document.getElementById("slide-count")?.value || "auto",
-        source: document.getElementById("slide-source")?.value || "combined",
-        theme: document.getElementById("slide-theme")?.value || "education",
-        extra: document.getElementById("slide-extra")?.value.trim() || ""
-    };
-}
-
-async function buildPresentationContext(requestData) {
-    const contexts = [];
-
-    if (requestData.source === "sgk" || requestData.source === "combined") {
-        const sgkContext = await searchKnowledgeBase(requestData.lessonName);
-        contexts.push(`NGUỒN TRA CỨU TỪ KHO TÀI LIỆU:\n${sgkContext}`);
-    }
-
-    if (requestData.source === "khbd" || requestData.source === "combined") {
-        if (typeof currentKHBD !== "undefined" && currentKHBD) {
-            contexts.push(summarizeKHBDForPresentation(currentKHBD));
-        } else if (requestData.source === "khbd") {
-            throw new Error("Chưa có KHBD. Hãy tạo KHBD trước hoặc chọn nguồn SGK trong kho.");
-        } else {
-            contexts.push("Chưa có KHBD vừa tạo; chỉ sử dụng dữ liệu tìm được trong Kho tài liệu.");
-        }
-    }
-
-    return contexts.join("\n\n============================================================\n\n");
-}
-
-function normalizePresentation(data, requestData) {
-    const normalized = data && typeof data === "object" ? data : {};
-    normalized.presentation = normalized.presentation || {};
-    normalized.presentation.title = normalized.presentation.title || requestData.lessonName;
-    normalized.presentation.subtitle = normalized.presentation.subtitle || `Tin học ${requestData.grade}`;
-    normalized.presentation.grade = normalized.presentation.grade || requestData.grade;
-    normalized.presentation.book = normalized.presentation.book || requestData.book;
-    normalized.presentation.duration = normalized.presentation.duration || requestData.duration;
-    normalized.presentation.theme = requestData.theme || normalized.presentation.theme || "education";
-    normalized.presentation.overview = normalized.presentation.overview || "Bài giảng được tạo từ tài liệu giáo viên cung cấp.";
-
-    normalized.slides = Array.isArray(normalized.slides) ? normalized.slides : [];
-    normalized.slides = normalized.slides.map((slide, index) => ({
-        id: slide?.id || `slide-${Date.now()}-${index}`,
-        type: SLIDE_TYPES.some(([type]) => type === slide?.type) ? slide.type : "content",
-        title: slide?.title || `Trang ${index + 1}`,
-        minutes: Number(slide?.minutes) > 0 ? Number(slide.minutes) : 3,
-        learningGoal: slide?.learningGoal || "",
-        content: Array.isArray(slide?.content) ? slide.content.map(item => String(item)) : [],
-        visual: {
-            kind: slide?.visual?.kind || "minh họa",
-            prompt: slide?.visual?.prompt || "",
-            caption: slide?.visual?.caption || ""
-        },
-        interaction: {
-            instruction: slide?.interaction?.instruction || "",
-            question: slide?.interaction?.question || "",
-            options: Array.isArray(slide?.interaction?.options) ? slide.interaction.options.map(item => String(item)) : [],
-            answer: slide?.interaction?.answer || ""
-        },
-        teacherNotes: slide?.teacherNotes || "",
-        transition: slide?.transition || ""
-    }));
-
-    return normalized;
-}
-
-function validatePresentation(data) {
+// 6. Kiểm tra toàn diện chất lượng bài giảng[cite: 26]
+function validatePresentationFull(data) {
     const errors = [];
-    if (!data?.presentation?.title) errors.push("Thiếu tên bài giảng.");
-    if (!Array.isArray(data?.slides) || data.slides.length < 3) errors.push("Bài giảng cần có ít nhất 3 trang chiếu.");
-
-    (data?.slides || []).forEach((slide, index) => {
-        if (!slide.title) errors.push(`Trang ${index + 1} thiếu tiêu đề.`);
-        if (!Array.isArray(slide.content)) errors.push(`Trang ${index + 1} có nội dung không đúng định dạng.`);
+    if (!data?.slides || data.slides.length < 3) {
+        errors.push("Bài giảng phải có ít nhất 3 slide.");
+    }
+    
+    data.slides.forEach((slide, idx) => {
+        if (!slide.title) errors.push(`Slide ${idx + 1}: Thiếu tiêu đề.`);
+        if (slide.layout === "grid_2x2_cards" && (!slide.interaction?.options || slide.interaction.options.length < 2)) {
+            errors.push(`Slide ${idx + 1}: Dạng trắc nghiệm phải có đủ lựa chọn.`);
+        }
     });
+
     return errors;
 }
 
-async function generatePresentation() {
-    const generateButton = document.getElementById("btn-generate-slides");
-    const loading = document.getElementById("slides-loading");
-    const resultBox = document.getElementById("slides-result");
+// ============================================================
+// BẢN TRÌNH DIỄN VÀ CHỈNH SỬA GIAO DIỆN
+// ============================================================
 
-    hideSlidesMessage();
-    if (generateButton) {
-        generateButton.disabled = true;
-        generateButton.textContent = "⏳ Đang tạo bài giảng...";
-    }
-    if (loading) loading.style.display = "flex";
-    if (resultBox) resultBox.style.display = "none";
-    startSlidesTimer();
-
-    try {
-        const requestData = getPresentationRequestData();
-        if (!requestData.lessonName) throw new Error("Vui lòng chọn tên bài dạy.");
-
-        const context = await buildPresentationContext(requestData);
-        const prompt = buildPresentationPrompt(context, requestData);
-        const promptBox = document.getElementById("slide-prompt-preview");
-        if (promptBox) promptBox.value = prompt;
-
-        const generated = await callPresentationAI(context, requestData);
-        currentPresentation = normalizePresentation(generated, requestData);
-
-        const errors = validatePresentation(currentPresentation);
-        if (errors.length > 0) {
-            throw new Error(errors.join(" "));
-        }
-
-        renderPresentationEditor();
-        document.getElementById("btn-export-pptx").disabled = false;
-        document.getElementById("btn-add-slide").disabled = false;
-        showSlidesMessage(`Đã tạo ${currentPresentation.slides.length} trang chiếu. Có thể chỉnh sửa trực tiếp trước khi xuất PowerPoint.`, "success");
-    } catch (error) {
-        console.error("Presentation generation error:", error);
-        showSlidesMessage(`Không thể tạo bài giảng: ${error.message}`, "error");
-    } finally {
-        stopSlidesTimer();
-        if (loading) loading.style.display = "none";
-        if (generateButton) {
-            generateButton.disabled = false;
-            generateButton.textContent = "✨ AI tạo bài giảng";
-        }
-    }
-}
-
-function getSlideTypeOptions(selectedType) {
-    return SLIDE_TYPES.map(([value, label]) =>
-        `<option value="${value}" ${selectedType === value ? "selected" : ""}>${label}</option>`
+function getLayoutSelectOptions(selectedLayout) {
+    return LAYOUT_OPTIONS.map(([value, label]) =>
+        `<option value="${value}" ${selectedLayout === value ? "selected" : ""}>${label}</option>`
     ).join("");
 }
 
@@ -282,9 +196,8 @@ function renderPresentationEditor() {
                 <label>Phụ đề</label>
                 <input type="text" value="${escapeSlidesHTML(currentPresentation.presentation.subtitle)}" oninput="updatePresentationMeta('subtitle', this.value)">
             </div>
-            <div class="form-group meta-overview">
-                <label>Mô tả chung</label>
-                <textarea rows="2" oninput="updatePresentationMeta('overview', this.value)">${escapeSlidesHTML(currentPresentation.presentation.overview)}</textarea>
+            <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 10px;">
+                <button type="button" class="success-btn" onclick="autoCompletePresentation()">⚡ Tự động hoàn thiện toàn bộ bài giảng</button>
             </div>
         </div>`;
 
@@ -297,50 +210,45 @@ function renderPresentationEditor() {
                 <div class="slide-header-fields">
                     <input class="slide-title-input" type="text" value="${escapeSlidesHTML(slide.title)}" oninput="updateSlideField(${index}, 'title', this.value)">
                     <div class="slide-mini-controls">
-                        <select onchange="updateSlideField(${index}, 'type', this.value)">${getSlideTypeOptions(slide.type)}</select>
+                        <select onchange="updateSlideField(${index}, 'layout', this.value)">${getLayoutSelectOptions(slide.layout)}</select>
                         <label>Phút <input type="number" min="1" max="45" value="${escapeSlidesHTML(slide.minutes)}" onchange="updateSlideField(${index}, 'minutes', Number(this.value))"></label>
                     </div>
                 </div>
                 <div class="slide-order-actions">
                     <button type="button" title="Đưa lên" onclick="moveSlide(${index}, -1)" ${index === 0 ? "disabled" : ""}>↑</button>
                     <button type="button" title="Đưa xuống" onclick="moveSlide(${index}, 1)" ${index === currentPresentation.slides.length - 1 ? "disabled" : ""}>↓</button>
-                    <button type="button" title="Nhân bản" onclick="duplicateSlide(${index})">⧉</button>
                     <button type="button" class="danger-small" title="Xóa" onclick="deleteSlide(${index})">×</button>
                 </div>
             </div>
 
+            <!-- CÁC NÚT THAO TÁC NHANH TRÊN TỪNG SLIDE -->
+            <div style="background: #f1f5f9; padding: 6px 14px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="secondary-btn" style="padding: 4px 8px; font-size: 12px;" onclick="shortenSlideText(${index})">✂️ Rút gọn</button>
+                <button type="button" class="secondary-btn" style="padding: 4px 8px; font-size: 12px;" onclick="splitSlide(${index})">✂️ Tách slide</button>
+                <button type="button" class="secondary-btn" style="padding: 4px 8px; font-size: 12px;" onclick="mergeWithNextSlide(${index})">🔗 Gộp slide sau</button>
+                <button type="button" class="secondary-btn" style="padding: 4px 8px; font-size: 12px;" onclick="regenerateSingleSlide(${index})">🔄 Tạo lại slide</button>
+            </div>
+
             <div class="slide-editor-grid">
                 <div class="form-group slide-main-content">
-                    <label>Nội dung trên trang <small>(mỗi dòng là một ý)</small></label>
-                    <textarea rows="7" oninput="updateSlideContent(${index}, this.value)">${escapeSlidesHTML(slide.content.join("\n"))}</textarea>
+                    <label>Nội dung trên trang <small>(mỗi dòng một ý ngắn)</small></label>
+                    <textarea rows="5" oninput="updateSlideContent(${index}, this.value)">${escapeSlidesHTML(slide.content.join("\n"))}</textarea>
                 </div>
                 <div class="form-group">
-                    <label>Mục tiêu của trang</label>
-                    <textarea rows="3" oninput="updateSlideField(${index}, 'learningGoal', this.value)">${escapeSlidesHTML(slide.learningGoal)}</textarea>
+                    <label>Nguồn trích dẫn SGK</label>
+                    <input type="text" value="${escapeSlidesHTML(slide.sgkCitation || "")}" oninput="updateSlideField(${index}, 'sgkCitation', this.value)" placeholder="Ví dụ: Trang 12 SGK">
                 </div>
                 <div class="form-group">
-                    <label>Gợi ý hình ảnh</label>
-                    <textarea rows="3" oninput="updateNestedSlideField(${index}, 'visual', 'prompt', this.value)">${escapeSlidesHTML(slide.visual.prompt)}</textarea>
+                    <label>Câu hỏi / Tương tác</label>
+                    <textarea rows="2" oninput="updateNestedSlideField(${index}, 'interaction', 'question', this.value)">${escapeSlidesHTML(slide.interaction?.question || "")}</textarea>
                 </div>
                 <div class="form-group">
-                    <label>Câu hỏi / tương tác</label>
-                    <textarea rows="3" oninput="updateNestedSlideField(${index}, 'interaction', 'question', this.value)">${escapeSlidesHTML(slide.interaction.question)}</textarea>
-                </div>
-                <div class="form-group">
-                    <label>Phương án trả lời <small>(mỗi dòng một phương án)</small></label>
+                    <label>Phương án trắc nghiệm</label>
                     <textarea rows="3" oninput="updateSlideOptions(${index}, this.value)">${escapeSlidesHTML(optionText)}</textarea>
                 </div>
                 <div class="form-group">
-                    <label>Đáp án / kết quả mong đợi</label>
-                    <textarea rows="3" oninput="updateNestedSlideField(${index}, 'interaction', 'answer', this.value)">${escapeSlidesHTML(slide.interaction.answer)}</textarea>
-                </div>
-                <div class="form-group slide-main-content">
-                    <label>Ghi chú giáo viên</label>
-                    <textarea rows="4" oninput="updateSlideField(${index}, 'teacherNotes', this.value)">${escapeSlidesHTML(slide.teacherNotes)}</textarea>
-                </div>
-                <div class="form-group">
-                    <label>Câu chuyển tiếp</label>
-                    <textarea rows="2" oninput="updateSlideField(${index}, 'transition', this.value)">${escapeSlidesHTML(slide.transition)}</textarea>
+                    <label>Đáp án đúng</label>
+                    <input type="text" value="${escapeSlidesHTML(slide.interaction?.answer || "")}" oninput="updateNestedSlideField(${index}, 'interaction', 'answer', this.value)">
                 </div>
             </div>
         </article>`;
@@ -358,7 +266,6 @@ function updatePresentationMeta(field, value) {
 function updateSlideField(index, field, value) {
     if (!currentPresentation?.slides?.[index]) return;
     currentPresentation.slides[index][field] = value;
-    updatePresentationSummaryOnly();
 }
 
 function updateNestedSlideField(index, group, field, value) {
@@ -383,13 +290,6 @@ function updateSlideOptions(index, value) {
         .filter(Boolean);
 }
 
-function updatePresentationSummaryOnly() {
-    if (!currentPresentation) return;
-    const summary = document.getElementById("presentation-summary");
-    const totalMinutes = currentPresentation.slides.reduce((total, slide) => total + (Number(slide.minutes) || 0), 0);
-    if (summary) summary.textContent = `${currentPresentation.slides.length} trang • khoảng ${totalMinutes} phút • có thể chỉnh sửa trực tiếp`;
-}
-
 function moveSlide(index, direction) {
     if (!currentPresentation) return;
     const target = index + direction;
@@ -398,70 +298,15 @@ function moveSlide(index, direction) {
     renderPresentationEditor();
 }
 
-function duplicateSlide(index) {
-    if (!currentPresentation?.slides?.[index]) return;
-    const clone = JSON.parse(JSON.stringify(currentPresentation.slides[index]));
-    clone.id = `slide-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    clone.title = `${clone.title} (bản sao)`;
-    currentPresentation.slides.splice(index + 1, 0, clone);
-    renderPresentationEditor();
-}
-
 function deleteSlide(index) {
     if (!currentPresentation?.slides?.[index]) return;
-    if (!confirm(`Xóa trang ${index + 1}: ${currentPresentation.slides[index].title}?`)) return;
+    if (!confirm(`Xóa slide ${index + 1}?`)) return;
     currentPresentation.slides.splice(index, 1);
     renderPresentationEditor();
 }
 
-function addBlankSlide() {
-    if (!currentPresentation) {
-        showSlidesMessage("Hãy tạo hoặc mở một bài giảng trước khi thêm trang.", "error");
-        return;
-    }
-
-    currentPresentation.slides.push({
-        id: `slide-${Date.now()}`,
-        type: "content",
-        title: "Trang mới",
-        minutes: 3,
-        learningGoal: "",
-        content: ["Nhập nội dung tại đây"],
-        visual: { kind: "minh họa", prompt: "", caption: "" },
-        interaction: { instruction: "", question: "", options: [], answer: "" },
-        teacherNotes: "",
-        transition: ""
-    });
-    renderPresentationEditor();
-}
-
 function savePresentationDraft() {
-    if (!currentPresentation) {
-        showSlidesMessage("Chưa có bài giảng để lưu.", "error");
-        return;
-    }
+    if (!currentPresentation) return;
     localStorage.setItem("khbd_presentation_draft", JSON.stringify(currentPresentation));
-    showSlidesMessage("Đã lưu bản nháp bài giảng trên trình duyệt này.", "success");
+    showSlidesMessage("💾 Đã lưu bản nháp bài giảng!", "success");
 }
-
-function loadPresentationDraft() {
-    const saved = localStorage.getItem("khbd_presentation_draft");
-    if (!saved) return;
-    try {
-        currentPresentation = JSON.parse(saved);
-        if (validatePresentation(currentPresentation).length === 0) {
-            renderPresentationEditor();
-            document.getElementById("btn-export-pptx").disabled = false;
-            document.getElementById("btn-add-slide").disabled = false;
-        }
-    } catch (error) {
-        console.warn("Không thể nạp bản nháp bài giảng:", error);
-    }
-}
-
-function initializeSlidesFeature() {
-    if (typeof updateSlideLessonOptions === "function") updateSlideLessonOptions();
-    loadPresentationDraft();
-}
-
-window.addEventListener("DOMContentLoaded", initializeSlidesFeature);

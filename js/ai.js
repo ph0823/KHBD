@@ -185,7 +185,7 @@ function cleanJSON(text) {
         return JSON.parse(cleaned);
     } catch (error) {
         console.error("JSON AI trả về không hợp lệ:", cleaned);
-        throw new Error("AI trả về JSON không hợp lệ. Hãy thử tạo lại KHBD.");
+        throw new Error("AI trả về JSON không hợp lệ. Hãy thử tạo lại.");
     }
 }
 
@@ -332,28 +332,8 @@ async function callAI(context, requestData) {
 }
 
 // ============================================================
-// 5. TÍNH NĂNG TẠO BÀI GIẢNG TRÌNH CHIẾU TỰ ĐỘNG LỰA CHỌN BỐ CỤC
+// 5. KỊCH BẢN SƯ PHẠM & JSON SCHEMA BÀI GIẢNG TRÌNH CHIẾU HOÀN HẢO
 // ============================================================
-
-const PRESENTATION_SYSTEM_PROMPT = `
-Bạn là chuyên gia thiết kế bài giảng trình chiếu môn Tin học THCS tại Việt Nam.
-
-Nhiệm vụ của bạn là phân tích nội dung SGK, KHBD và tự động lựa chọn BỐ CỤC TRÌNH CHIẾU CHIẾN LƯỢC phù hợp cho từng trang.
-
-NGUYÊN TẮC PHÂN BỔ BỐ CỤC (FIELD "type"):
-- "title": Trang tiêu đề chính của bài học.
-- "content": Dạng danh sách kiến thức thông thường.
-- "comparison": Khi nội dung so sánh 2 đối tượng, ưu/nhược điểm, phân biệt khái niệm (Mạng wired vs wireless, RAM vs ROM,...).
-- "big_stat": Khi có định nghĩa trọng tâm, công thức quan trọng, hoặc thông điệp chốt cần khắc sâu.
-- "quiz": Trang câu hỏi trắc nghiệm (bắt buộc phân chia 4 phương án A, B, C, D vào mảng options).
-- "timeline": Khi mô tả quy trình thực hành phòng máy, thuật toán từng bước (Bước 1, Bước 2,...).
-- "message": Trang tổng kết, dặn dò hoặc thông điệp bài học.
-
-QUY TẮC NỘI DUNG:
-1. Mỗi trang tập trung 1 ý chính, không quá 6 gạch đầu dòng.
-2. Trang quiz phải có câu hỏi trong field "question", 4 lựa chọn trong "options", và đáp án đúng trong "answer".
-3. Trả về đúng JSON theo Schema, không viết Markdown.
-`;
 
 const PRESENTATION_SCHEMA = {
     type: "object",
@@ -379,40 +359,58 @@ const PRESENTATION_SCHEMA = {
                     id: { type: "string" },
                     type: {
                         type: "string",
-                        enum: ["title", "objectives", "warmup", "content", "comparison", "big_stat", "timeline", "activity", "quiz", "practice", "application", "summary", "mindmap", "message"]
+                        enum: ["title", "objectives", "warmup", "content", "activity", "quiz", "practice", "application", "summary"]
+                    },
+                    layout: {
+                        type: "string",
+                        enum: ["title_hero", "standard_text", "split_2col", "grid_2x2_cards", "timeline_steps", "big_stat", "mindmap_nodes"]
                     },
                     title: { type: "string" },
                     minutes: { type: "number" },
                     learningGoal: { type: "string" },
                     content: { type: "array", items: { type: "string" } },
-                    visual: {
-                        type: "object",
-                        properties: {
-                            kind: { type: "string" },
-                            prompt: { type: "string" },
-                            caption: { type: "string" }
-                        },
-                        required: ["kind", "prompt", "caption"]
-                    },
+                    sgkCitation: { type: "string" },
                     interaction: {
                         type: "object",
                         properties: {
-                            instruction: { type: "string" },
                             question: { type: "string" },
                             options: { type: "array", items: { type: "string" } },
                             answer: { type: "string" }
                         },
-                        required: ["instruction", "question", "options", "answer"]
+                        required: ["question", "options", "answer"]
                     },
                     teacherNotes: { type: "string" },
                     transition: { type: "string" }
                 },
-                required: ["id", "type", "title", "minutes", "learningGoal", "content", "visual", "interaction", "teacherNotes", "transition"]
+                required: ["id", "type", "layout", "title", "minutes", "learningGoal", "content", "sgkCitation", "interaction", "teacherNotes", "transition"]
             }
         }
     },
     required: ["presentation", "slides"]
 };
+
+const PRESENTATION_SYSTEM_PROMPT = `
+Bạn là chuyên gia thiết kế kịch bản bài giảng trình chiếu môn Tin học THCS chuẩn GDPT 2018.
+
+QUY TẮC TIẾN TRÌNH SƯ PHẠM BẮT BUỘC:
+1. TIẾN TRÌNH SLIDE CHUẨN:
+   - Slide 1: Tiêu đề bài học (type: "title", layout: "title_hero")
+   - Slide 2: Mục tiêu bài học (type: "objectives", layout: "standard_text")
+   - Slide 3: Mở đầu / Khởi động (type: "warmup", layout: "big_stat" hoặc "quiz")
+   - Các slide Hình thành kiến thức mới (type: "content"/"activity", layout chọn phù hợp: "split_2col", "timeline_steps", "standard_text")
+   - Các slide Luyện tập & Câu hỏi nhanh (type: "practice"/"quiz", layout: "grid_2x2_cards")
+   - Slide Vận dụng / Mở rộng (type: "application", layout: "standard_text")
+   - Slide Sơ đồ tư duy / Tổng kết (type: "summary", layout: "mindmap_nodes")
+
+2. TRÌNH BÀY & NỘI DUNG NGUYÊN TẮC:
+   - Mỗi slide chỉ trình bày TỐI ĐA 4-5 gạch đầu dòng trong mảng "content".
+   - Mỗi dòng ngắn gọn, cô đọng, KHÔNG Quá 15 từ/dòng để tránh tràn chữ.
+   - Khi mô tả thao tác phòng máy hay quy trình algorithm: BẮT BUỘC chọn layout "timeline_steps".
+   - Khi so sánh 2 khái niệm hoặc ưu/nhược điểm: BẮT BUỘC chọn layout "split_2col".
+   - Khi tạo câu hỏi trắc nghiệm: Đưa 4 lựa chọn vào "options" và ghi rõ đáp án đúng vào "answer".
+   - Ghi rõ nguồn trích dẫn SGK trong trường "sgkCitation" (Ví dụ: "Hình 2.1 - Trang 14, SGK").
+   - KHÔNG tạo văn bản hay khung nét đứt "Gợi ý hình ảnh" tạm bợ.
+`;
 
 function getAutomaticSlideRange(duration) {
     const durationText = String(duration || "2 tiết");
@@ -450,7 +448,7 @@ ${safeContext}
 ============================================================
 NHIỆM VỤ
 ============================================================
-Hãy tạo kịch bản bài giảng trình chiếu đa dạng bố cục (so sánh, từ khóa ghi nhớ, câu hỏi trắc nghiệm dạng thẻ card, tiến trình các bước thực hành).
+Xây dựng kịch bản trình chiếu hoàn chỉnh theo đúng Schema và Quy tắc sư phạm.
 
 Chỉ trả về JSON đúng schema, không Markdown.
 `;
@@ -518,7 +516,8 @@ async function callGeminiPresentation(apiKey, prompt) {
 }
 
 async function callOpenAIPresentation(apiKey, prompt) {
-    const response = await fetch("[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)", {
+    const endpoint = "[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)";
+    const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
         body: JSON.stringify({
@@ -536,7 +535,8 @@ async function callOpenAIPresentation(apiKey, prompt) {
 }
 
 async function callOpenRouterPresentation(apiKey, prompt) {
-    const response = await fetch("[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)", {
+    const endpoint = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
+    const response = await fetch(endpoint, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

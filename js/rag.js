@@ -1,73 +1,66 @@
 // ==========================================
-// 1. KHỞI TẠO BỘ NHỚ VÀ CHỈ MỤC TÌM KIẾM
+// rag.js - BỘ TRA CỨU RAG NGỮ NGHĨA & ĐA TỪ KHÓA
 // ==========================================
 localforage.config({ name: 'AI_KHBD_DB' });
 
 let documentIndex = null;
 let documentsData = [];
 
-// Phân đoạn văn bản (Chunking) để tối ưu độ chính xác tìm kiếm
-function chunkText(text, maxWords = 300) {
-    const words = text.split(/\s+/);
+// Phân đoạn ngữ nghĩa dựa trên tiêu đề mục và trang SGK
+function chunkTextBySections(text, fileName) {
+    const lines = text.split(/\r?\n/);
     const chunks = [];
-    for (let i = 0; i < words.length; i += maxWords) {
-        chunks.push(words.slice(i, i + maxWords).join(' '));
+    let currentChunk = [];
+    let currentHeader = "Nội dung chung";
+    let currentPage = "Chưa rõ trang";
+
+    lines.forEach(line => {
+        const trimmed = line.trim();
+        const pageMatch = trimmed.match(/(?:Trang|Tr\.)\s*(\d+)/i);
+        if (pageMatch) currentPage = `Trang ${pageMatch[1]}`;
+
+        const isHeader = /^(Mục|Bài|\d+\.|\bHoạt động\b|\bLuyện tập\b|\bVận dụng\b|\bGhi nhớ\b)/i.test(trimmed);
+        
+        if (isHeader && currentChunk.length > 30) {
+            chunks.push({
+                header: currentHeader,
+                page: currentPage,
+                content: currentChunk.join('\n')
+            });
+            currentChunk = [];
+            currentHeader = trimmed;
+        } else {
+            currentChunk.push(line);
+        }
+    });
+
+    if (currentChunk.length > 0) {
+        chunks.push({
+            header: currentHeader,
+            page: currentPage,
+            content: currentChunk.join('\n')
+        });
     }
+
     return chunks;
 }
 
-// Lập chỉ mục tìm kiếm văn bản với LunrJS
 function buildIndex(docs) {
     documentsData = docs;
     documentIndex = lunr(function () {
         this.ref('id');
         this.field('content');
+        this.field('header');
         docs.forEach(doc => this.add(doc));
     });
 }
 
-// ==========================================
-// 2. BỘ ĐỌC FILE ĐA ĐỊNH DẠNG (TXT, DOCX, PDF)
-// ==========================================
-async function extractTextFromFile(file) {
-    const extension = file.name.split('.').pop().toLowerCase();
-
-    if (extension === 'txt') {
-        return await file.text();
-    } 
-    if (extension === 'docx') {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-        return result.value;
-    } 
-    if (extension === 'pdf') {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            fullText += textContent.items.map(item => item.str).join(' ') + '\n';
-        }
-        return fullText;
-    }
-
-    throw new Error('Định dạng không hỗ trợ. Vui lòng chọn .docx, .pdf hoặc .txt.');
-}
-
-// ==========================================
-// 3. TẢI LÊN, XỬ LÝ VÀ LƯU VÀO CƠ SỞ DỮ LIỆU
-// ==========================================
 async function uploadAndIndexFiles() {
     const fileInput = document.getElementById('file-input');
     const loadingEl = document.getElementById('doc-loading');
     const files = fileInput.files;
 
-    if (!files || files.length === 0) {
-        alert('Vui lòng chọn ít nhất một file!');
-        return;
-    }
-
+    if (!files || files.length === 0) return alert('Vui lòng chọn file!');
     loadingEl.style.display = 'block';
 
     try {
@@ -75,14 +68,15 @@ async function uploadAndIndexFiles() {
 
         for (let file of files) {
             const rawText = await extractTextFromFile(file);
-            const chunks = chunkText(rawText);
+            const sectionChunks = chunkTextBySections(rawText, file.name);
             
-            // Lưu từng đoạn text đi kèm tên file
-            chunks.forEach((chunk, index) => {
+            sectionChunks.forEach((chunk, idx) => {
                 docs.push({
-                    id: `${Date.now()}_${Math.random().toString(36).substr(2, 5)}_${index}`,
+                    id: `${Date.now()}_${idx}`,
                     fileName: file.name,
-                    content: chunk,
+                    header: chunk.header,
+                    page: chunk.page,
+                    content: `[File: ${file.name} | ${chunk.page} | Mục: ${chunk.header}]\n${chunk.content}`,
                     createdAt: new Date().toLocaleDateString('vi-VN')
                 });
             });
@@ -90,73 +84,37 @@ async function uploadAndIndexFiles() {
 
         await localforage.setItem('khbd_documents', docs);
         buildIndex(docs);
-
-        // Đặt lại trạng thái giao diện
         fileInput.value = '';
-        document.getElementById('selected-files-text').innerText = 'Chưa chọn file nào';
-        document.getElementById('btn-process-file').style.display = 'none';
-
         await renderDocList();
-        alert('✅ Đã tải lên và lập chỉ mục tài liệu thành công!');
-    } catch (error) {
-        alert('❌ Lỗi khi đọc file: ' + error.message);
+        alert('✅ Đã tải lên và phân đoạn ngữ nghĩa tài liệu thành công!');
+    } catch (e) {
+        alert('❌ Lỗi xử lý file: ' + e.message);
     } finally {
         loadingEl.style.display = 'none';
     }
 }
 
-// ==========================================
-// 4. HIỂN THỊ VÀ XÓA TÀI LIỆU TRÊN GIAO DIỆN
-// ==========================================
-async function renderDocList() {
-    const docListEl = document.getElementById('doc-list');
-    if (!docListEl) return;
-
+// Search tra cứu đa chiều theo 5 khía cạnh sư phạm
+async function searchKnowledgeBase(lessonName) {
     const docs = (await localforage.getItem('khbd_documents')) || [];
-    if (docs.length === 0) {
-        docListEl.innerHTML = '<li style="color: #888; font-style: italic;">Chưa có tài liệu nào trong kho.</li>';
-        return;
-    }
-
+    if (docs.length === 0) return "Không có tài liệu SGK trong kho. AI tự động dùng tri thức chuẩn GDPT 2018.";
     if (!documentIndex) buildIndex(docs);
 
-    // Lọc danh sách tên file duy nhất để hiển thị
-    const uniqueFiles = [...new Set(docs.map(d => d.fileName))];
+    const keywords = [lessonName, `${lessonName} mục tiêu`, `${lessonName} hoạt động`, `${lessonName} luyện tập`, `${lessonName} ghi nhớ`];
+    let combinedResults = new Set();
 
-    docListEl.innerHTML = uniqueFiles.map(fileName => `
-        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; margin-bottom: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
-            <div><strong>📄 ${fileName}</strong></div>
-            <button onclick="deleteDocByName('${fileName}')" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; border-radius: 4px;">🗑️ Xóa</button>
-        </li>
-    `).join('');
-}
-
-async function deleteDocByName(fileName) {
-    if (!confirm(`Bạn có chắc muốn xóa tài liệu "${fileName}"?`)) return;
-    let docs = (await localforage.getItem('khbd_documents')) || [];
-    docs = docs.filter(d => d.fileName !== fileName);
-    
-    await localforage.setItem('khbd_documents', docs);
-    buildIndex(docs);
-    await renderDocList();
-}
-
-// ==========================================
-// 5. TRÍCH XUẤT NGỮ CẢNH (RAG SEARCH)
-// ==========================================
-async function searchKnowledgeBase(query) {
-    const docs = (await localforage.getItem('khbd_documents')) || [];
-    if (docs.length === 0) return "Không có tài liệu ưu tiên trong kho. AI sẽ sử dụng kiến thức nền.";
-    
-    if (!documentIndex) buildIndex(docs);
-
-    const results = documentIndex.search(query);
-    if (results.length === 0) return "Không tìm thấy nội dung liên quan trực tiếp trong tài liệu tải lên.";
-    
-    let context = "";
-    results.slice(0, 3).forEach(res => {
-        const doc = documentsData.find(d => d.id === res.ref);
-        if (doc) context += `[Nguồn: ${doc.fileName}]:\n${doc.content}\n\n`;
+    keywords.forEach(kw => {
+        try {
+            const res = documentIndex.search(kw);
+            res.slice(0, 3).forEach(r => combinedResults.add(r.ref));
+        } catch (e) {}
     });
-    return context;
+
+    let context = "";
+    Array.from(combinedResults).slice(0, 8).forEach(refId => {
+        const doc = documentsData.find(d => d.id === refId);
+        if (doc) context += `${doc.content}\n\n------------------------\n\n`;
+    });
+
+    return context || "Không tìm thấy nội dung liên quan trực tiếp trong tài liệu tải lên.";
 }
