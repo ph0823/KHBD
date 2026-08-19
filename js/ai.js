@@ -1199,3 +1199,294 @@ async function callAI(
             );
     }
 }
+
+// ============================================================
+// 11. AI TẠO BÀI GIẢNG TRÌNH CHIẾU
+// ============================================================
+
+const PRESENTATION_SYSTEM_PROMPT = `
+Bạn là chuyên gia thiết kế bài giảng trình chiếu môn Tin học THCS tại Việt Nam.
+
+Nhiệm vụ của bạn là chuyển nội dung SGK, sách giáo viên hoặc KHBD thành một kịch bản trình chiếu rõ ràng, trực quan và có thể dạy ngay.
+
+NGUYÊN TẮC BẮT BUỘC:
+1. Ưu tiên tuyệt đối CONTEXT do giáo viên cung cấp; không tự nhận nội dung là nguyên văn SGK khi CONTEXT không đủ.
+2. Nội dung phù hợp học sinh THCS, ngắn gọn, mỗi trang chỉ tập trung một ý chính.
+3. Không sao chép các đoạn văn dài từ SGK. Phải diễn giải thành gạch đầu dòng, câu hỏi, nhiệm vụ hoặc sơ đồ.
+4. Bài giảng phải có tiến trình hợp lí: mở đầu, mục tiêu, hình thành kiến thức, hoạt động tương tác, luyện tập, vận dụng, củng cố.
+5. Với bài thực hành trong phòng máy, ưu tiên nhiệm vụ thao tác và sản phẩm quan sát được.
+6. Mỗi trang phải có thời lượng dự kiến, mục tiêu, gợi ý hình ảnh và ghi chú dành cho giáo viên.
+7. Khi CONTEXT có mã hình, tên hình hoặc số trang SGK thì phải ghi chính xác. Nếu không có, chỉ viết gợi ý hình minh họa, không bịa số hình hoặc số trang.
+8. Câu hỏi trắc nghiệm phải có đáp án; đáp án chỉ đưa vào trường answer hoặc teacherNotes, không đưa lộ ngay trong nội dung trình chiếu.
+9. Nội dung trên trang không quá 6 gạch đầu dòng; mỗi gạch đầu dòng ưu tiên dưới 18 từ.
+10. Chỉ trả về JSON hợp lệ theo schema. Không Markdown, không lời dẫn ngoài JSON.
+`;
+
+const PRESENTATION_SCHEMA = {
+    type: "object",
+    properties: {
+        presentation: {
+            type: "object",
+            properties: {
+                title: { type: "string" },
+                subtitle: { type: "string" },
+                grade: { type: "string" },
+                book: { type: "string" },
+                duration: { type: "string" },
+                theme: { type: "string" },
+                overview: { type: "string" }
+            },
+            required: ["title", "subtitle", "grade", "book", "duration", "theme", "overview"]
+        },
+        slides: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    id: { type: "string" },
+                    type: {
+                        type: "string",
+                        enum: ["title", "objectives", "warmup", "content", "activity", "quiz", "practice", "application", "summary", "mindmap", "message"]
+                    },
+                    title: { type: "string" },
+                    minutes: { type: "number" },
+                    learningGoal: { type: "string" },
+                    content: { type: "array", items: { type: "string" } },
+                    visual: {
+                        type: "object",
+                        properties: {
+                            kind: { type: "string" },
+                            prompt: { type: "string" },
+                            caption: { type: "string" }
+                        },
+                        required: ["kind", "prompt", "caption"]
+                    },
+                    interaction: {
+                        type: "object",
+                        properties: {
+                            instruction: { type: "string" },
+                            question: { type: "string" },
+                            options: { type: "array", items: { type: "string" } },
+                            answer: { type: "string" }
+                        },
+                        required: ["instruction", "question", "options", "answer"]
+                    },
+                    teacherNotes: { type: "string" },
+                    transition: { type: "string" }
+                },
+                required: ["id", "type", "title", "minutes", "learningGoal", "content", "visual", "interaction", "teacherNotes", "transition"]
+            }
+        }
+    },
+    required: ["presentation", "slides"]
+};
+
+function getAutomaticSlideRange(duration) {
+    const durationText = String(duration || "2 tiết");
+    if (durationText.startsWith("1")) return "10 đến 14";
+    if (durationText.startsWith("3")) return "24 đến 30";
+    return "18 đến 24";
+}
+
+function buildPresentationPrompt(context, requestData) {
+    const grade = requestData?.grade || "";
+    const book = requestData?.book || "";
+    const lessonName = requestData?.lessonName || "";
+    const duration = requestData?.duration || "2 tiết";
+    const theme = requestData?.theme || "education";
+    const extra = requestData?.extra || "Không có yêu cầu bổ sung.";
+    const slideCount = requestData?.slideCount === "auto"
+        ? `${getAutomaticSlideRange(duration)} trang`
+        : `khoảng ${requestData?.slideCount || 20} trang`;
+    const safeContext = String(context || "Không có dữ liệu nguồn phù hợp.").trim();
+
+    return `
+============================================================
+THÔNG TIN BÀI DẠY
+============================================================
+Môn học: Tin học
+Lớp: ${grade}
+Bộ sách: ${book}
+Tên bài: ${lessonName}
+Thời lượng: ${duration}
+Số lượng: ${slideCount}
+Phong cách: ${theme}
+Yêu cầu bổ sung: ${extra}
+
+============================================================
+CONTEXT TỪ SGK / KHBD CỦA GIÁO VIÊN
+============================================================
+${safeContext}
+
+============================================================
+NHIỆM VỤ
+============================================================
+Tạo kịch bản bài giảng trình chiếu hoàn chỉnh, có thể xuất trực tiếp thành PowerPoint.
+
+Cấu trúc đề nghị:
+- 1 trang tiêu đề.
+- 1 trang tình huống hoặc câu hỏi khởi động.
+- 1 trang mục tiêu học tập.
+- Các trang hình thành kiến thức theo đúng các mục có trong CONTEXT.
+- Xen kẽ câu hỏi nhanh, "Em có biết?", ví dụ, hoạt động cá nhân hoặc nhóm.
+- Trang luyện tập có đáp án trong trường answer/teacherNotes.
+- Trang vận dụng gắn thực tế hoặc sản phẩm trên máy tính.
+- Trang sơ đồ tư duy/tóm tắt.
+- Trang thông điệp hoặc nhiệm vụ sau bài học.
+
+Yêu cầu mỗi trang:
+- title rõ ràng.
+- minutes hợp lí; tổng thời gian gần với ${duration}.
+- learningGoal mô tả điều học sinh đạt được.
+- content gồm các ý ngắn, không viết thành đoạn dài.
+- visual.prompt mô tả hình minh họa có thể tạo bằng AI hoặc tìm trong SGK.
+- interaction luôn tồn tại; nếu trang không tương tác thì để chuỗi rỗng và mảng options rỗng.
+- teacherNotes hướng dẫn giáo viên tổ chức, câu trả lời mong đợi và lưu ý trình chiếu.
+- transition là câu nối ngắn sang trang tiếp theo.
+
+Chỉ trả về JSON đúng schema, không Markdown.
+`;
+}
+
+async function parseProviderJsonResponse(response, providerName) {
+    const raw = await response.text();
+    let data;
+    try {
+        data = raw ? JSON.parse(raw) : {};
+    } catch (error) {
+        console.error(`${providerName} raw response:`, raw);
+        throw new Error(`${providerName} trả về dữ liệu không hợp lệ.`);
+    }
+
+    if (!response.ok) {
+        const message = data?.error?.message || data?.message || "Lỗi không xác định";
+        throw new Error(`${providerName} API (${response.status}): ${message}`);
+    }
+
+    return data;
+}
+
+function extractGeminiInteractionText(data) {
+    if (typeof data?.output_text === "string" && data.output_text.trim()) {
+        return data.output_text.trim();
+    }
+
+    let text = "";
+    const collections = [data?.steps, data?.outputs];
+
+    for (const collection of collections) {
+        if (!Array.isArray(collection)) continue;
+        for (const item of collection) {
+            if (typeof item?.text === "string") text += item.text;
+            if (Array.isArray(item?.content)) {
+                for (const contentItem of item.content) {
+                    if (typeof contentItem?.text === "string") text += contentItem.text;
+                }
+            }
+        }
+    }
+
+    return text.trim();
+}
+
+async function callGeminiPresentation(apiKey, prompt) {
+    const endpoint = "https://generativelanguage.googleapis.com/v1/interactions";
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey
+        },
+        body: JSON.stringify({
+            model: "gemini-3.6-flash",
+            input: prompt,
+            system_instruction: PRESENTATION_SYSTEM_PROMPT,
+            store: false,
+            response_format: {
+                type: "text",
+                mime_type: "application/json",
+                schema: PRESENTATION_SCHEMA
+            }
+        })
+    });
+
+    const data = await parseProviderJsonResponse(response, "Gemini");
+    const text = extractGeminiInteractionText(data);
+    if (!text) throw new Error("Gemini không trả về nội dung bài giảng.");
+    return cleanJSON(text);
+}
+
+async function callOpenAIPresentation(apiKey, prompt) {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: PRESENTATION_SYSTEM_PROMPT },
+                { role: "user", content: prompt }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.3
+        })
+    });
+
+    const data = await parseProviderJsonResponse(response, "OpenAI");
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) throw new Error("OpenAI không trả về nội dung bài giảng.");
+    return cleanJSON(text);
+}
+
+async function callOpenRouterPresentation(apiKey, prompt) {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": window.location.origin,
+            "X-Title": "AI Tin THCS - Presentation Builder"
+        },
+        body: JSON.stringify({
+            model: "google/gemini-3.6-flash",
+            messages: [
+                { role: "system", content: PRESENTATION_SYSTEM_PROMPT },
+                { role: "user", content: prompt }
+            ],
+            response_format: {
+                type: "json_schema",
+                json_schema: {
+                    name: "lesson_presentation",
+                    strict: true,
+                    schema: PRESENTATION_SCHEMA
+                }
+            },
+            temperature: 0.3,
+            stream: false
+        })
+    });
+
+    const data = await parseProviderJsonResponse(response, "OpenRouter");
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) throw new Error("OpenRouter không trả về nội dung bài giảng.");
+    return cleanJSON(text);
+}
+
+async function callPresentationAI(context, requestData) {
+    const apiKey = getAPIKey();
+    const provider = getProvider();
+    const prompt = buildPresentationPrompt(context, requestData);
+
+    switch (provider) {
+        case "gemini":
+            return await callGeminiPresentation(apiKey, prompt);
+        case "openai":
+            return await callOpenAIPresentation(apiKey, prompt);
+        case "openrouter":
+            return await callOpenRouterPresentation(apiKey, prompt);
+        default:
+            throw new Error(`Nhà cung cấp AI "${provider}" không hợp lệ.`);
+    }
+}

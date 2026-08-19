@@ -90,17 +90,32 @@ const LESSONS_DATA = {
 // ==========================================
 // HÀM CẬP NHẬT DANH SÁCH BÀI DẠY
 // ==========================================
-function updateLessonOptions() {
-    const selectedGrade = document.getElementById('sel-grade').value;
-    const lessonSelect = document.getElementById('lesson-name');
-    
-    // Lấy danh sách bài tương ứng với lớp được chọn
-    const lessons = LESSONS_DATA[selectedGrade] || [];
-    
-    // Đổ danh sách <option> vào thẻ select
+function fillLessonSelect(selectId, grade) {
+    const lessonSelect = document.getElementById(selectId);
+    if (!lessonSelect) return;
+
+    const lessons = LESSONS_DATA[String(grade)] || [];
+    const previousValue = lessonSelect.value;
+
     lessonSelect.innerHTML = lessons
         .map(lesson => `<option value="${lesson}">${lesson}</option>`)
         .join('');
+
+    if (lessons.includes(previousValue)) {
+        lessonSelect.value = previousValue;
+    }
+}
+
+function updateLessonOptions() {
+    const gradeSelect = document.getElementById('sel-grade');
+    if (!gradeSelect) return;
+    fillLessonSelect('lesson-name', gradeSelect.value);
+}
+
+function updateSlideLessonOptions() {
+    const gradeSelect = document.getElementById('slide-grade');
+    if (!gradeSelect) return;
+    fillLessonSelect('slide-lesson-name', gradeSelect.value);
 }
 
 // ==========================================
@@ -112,6 +127,8 @@ function showSection(sectionId) {
     document.getElementById('sec-config').style.display = 'none';
     document.getElementById('sec-create').style.display = 'none';
     document.getElementById('sec-docs').style.display = 'none'; // Thêm màn hình kho tài liệu
+    const slidesSection = document.getElementById('sec-slides');
+    if (slidesSection) slidesSection.style.display = 'none';
     
     // 2. Bỏ highlight ở tất cả nút nav
     const navButtons = document.querySelectorAll('nav button');
@@ -126,6 +143,9 @@ function showSection(sectionId) {
         document.getElementById('nav-config').classList.add('active');
     } else if (sectionId === 'sec-create') {
         document.getElementById('nav-create').classList.add('active');
+    } else if (sectionId === 'sec-slides') {
+        document.getElementById('nav-slides')?.classList.add('active');
+        if (typeof syncSlidesFormFromKHBD === 'function') syncSlidesFormFromKHBD();
     } else if (sectionId === 'sec-docs') {
         document.getElementById('nav-docs').classList.add('active');
         // Khi mở kho tài liệu, tự động hiển thị danh sách các file đã lưu
@@ -154,9 +174,11 @@ document.getElementById('file-input').addEventListener('change', function(e) {
 // Gắn sự kiện chuyển tab
 document.getElementById('nav-config').addEventListener('click', () => showSection('sec-config'));
 document.getElementById('nav-create').addEventListener('click', () => showSection('sec-create'));
+document.getElementById('nav-slides')?.addEventListener('click', () => showSection('sec-slides'));
 
 // GẮN SỰ KIỆN: Thay đổi Lớp -> Tự động đổi danh sách Bài dạy
 document.getElementById('sel-grade').addEventListener('change', updateLessonOptions);
+document.getElementById('slide-grade')?.addEventListener('change', updateSlideLessonOptions);
 
 // ==========================================
 // LƯU CẤU HÌNH API
@@ -196,6 +218,7 @@ function saveConfig() {
 window.onload = function() {
     // 1. Nạp danh sách bài học lần đầu cho Lớp mặc định
     updateLessonOptions();
+    updateSlideLessonOptions();
 
     // 2. Kiểm tra API Key đã lưu
     const savedKey = localStorage.getItem('khbd_api_key');
