@@ -207,18 +207,13 @@ function getProvider() {
 // HÀM GỌI API GEMINI CHUẨN (KHÔNG BỊ LỖI CORS TRÊN TRÌNH DUYỆT)
 // ============================================================
 async function callGemini(apiKey, prompt) {
-    // Dùng endpoint chuẩn v1beta và model gemini-1.5-flash
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
     const requestBody = {
-        systemInstruction: {
-            parts: [{ text: SYSTEM_PROMPT }]
-        },
-        contents: [
-            { parts: [{ text: prompt }] }
-        ],
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-            responseMimeType: "application/json", // Yêu cầu AI trả về JSON
+            responseMimeType: "application/json", // Ép AI trả về JSON chuẩn
             temperature: 0.2
         }
     };
@@ -226,7 +221,8 @@ async function callGemini(apiKey, prompt) {
     const response = await fetch(endpoint, {
         method: "POST",
         headers: { 
-            "Content-Type": "application/json" 
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey // Truyền API Key ẩn trong Header giúp tránh lỗi CORS
         },
         body: JSON.stringify(requestBody)
     });
@@ -237,10 +233,8 @@ async function callGemini(apiKey, prompt) {
     }
 
     const data = await response.json();
-    
-    // Trích xuất văn bản phản hồi từ Google Gemini
+    // Xuất văn bản phản hồi từ Gemini
     const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    
     return cleanJSON(outputText);
 }
 
@@ -503,23 +497,34 @@ function extractGeminiInteractionText(data) {
 }
 
 async function callGeminiPresentation(apiKey, prompt) {
-    const endpoint = "https://generativelanguage.googleapis.com/v1/interactions";
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+    const requestBody = {
+        systemInstruction: { parts: [{ text: PRESENTATION_SYSTEM_PROMPT }] },
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.2
+        }
+    };
+
     const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify({
-            model: "gemini-3.6-flash",
-            input: prompt,
-            system_instruction: PRESENTATION_SYSTEM_PROMPT,
-            store: false,
-            response_format: { type: "text", mime_type: "application/json", schema: PRESENTATION_SCHEMA }
-        })
+        headers: { 
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey // Truyền API Key ẩn trong Header
+        },
+        body: JSON.stringify(requestBody)
     });
 
-    const data = await parseProviderJsonResponse(response, "Gemini");
-    const text = extractGeminiInteractionText(data);
-    if (!text) throw new Error("Gemini không trả về nội dung bài giảng.");
-    return cleanJSON(text);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Gemini API Error (${response.status}): ${errorData?.error?.message || "Lỗi kết nối"}`);
+    }
+
+    const data = await response.json();
+    const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return cleanJSON(outputText);
 }
 
 async function callOpenAIPresentation(apiKey, prompt) {
