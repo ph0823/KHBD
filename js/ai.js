@@ -207,54 +207,46 @@ function getProvider() {
 // HÀM GỌI API GEMINI CHUẨN (KHÔNG BỊ LỖI CORS TRÊN TRÌNH DUYỆT)
 // ============================================================
 async function callGemini(apiKey, prompt) {
-    
-const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
-
-    const requestBody = {
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-            responseMimeType: "application/json", // Ép AI trả về JSON chuẩn
-            temperature: 0.2
-        }
-    };
+    const endpoint =
+        "https://generativelanguage.googleapis.com/v1beta/interactions";
 
     const response = await fetch(endpoint, {
         method: "POST",
-        headers: { 
+        headers: {
             "Content-Type": "application/json",
-            "x-goog-api-key": apiKey // Truyền API Key ẩn trong Header giúp tránh lỗi CORS
+            "x-goog-api-key": apiKey,
+            "Api-Revision": "2026-05-20"
         },
-        body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Gemini API Error (${response.status}): ${errorData?.error?.message || "Lỗi kết nối"}`);
-    }
-
-    const data = await response.json();
-    // Xuất văn bản phản hồi từ Gemini
-    const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    return cleanJSON(outputText);
-}
-
-async function callOpenAI(apiKey, prompt) {
-    const endpoint = "https://api.openai.com/v1/chat/completions";
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
         body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: prompt }],
-            response_format: { type: "json_object" },
-            temperature: 0.2
+            model: "gemini-3.6-flash",
+            input: prompt,
+            system_instruction: SYSTEM_PROMPT,
+
+            response_format: {
+                type: "text",
+                mime_type: "application/json",
+                schema: KHBD_SCHEMA
+            },
+
+            generation_config: {
+                temperature: 0.2
+            },
+
+            stream: false,
+            store: false
         })
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(`OpenAI API Error (${response.status}): ${data?.error?.message}`);
-    return cleanJSON(data?.choices?.[0]?.message?.content);
+    const data = await parseProviderJsonResponse(response, "Gemini");
+
+    const outputText = extractGeminiInteractionText(data);
+
+    if (!outputText) {
+        console.error("Gemini response:", data);
+        throw new Error("Gemini không trả về nội dung KHBD.");
+    }
+
+    return cleanJSON(outputText);
 }
 
 async function callOpenRouter(apiKey, prompt) {
