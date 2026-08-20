@@ -205,7 +205,7 @@ function getProvider() {
 
 async function callGemini(apiKey, prompt) {
     const model = "gemini-3.6-flash";
-    const endpoint = "[https://generativelanguage.googleapis.com/v1/interactions](https://generativelanguage.googleapis.com/v1/interactions)";
+    const endpoint = "https://generativelanguage.googleapis.com/v1/interactions";
 
     const requestBody = {
         model: model,
@@ -238,7 +238,7 @@ async function callGemini(apiKey, prompt) {
 }
 
 async function callOpenAI(apiKey, prompt) {
-    const endpoint = "[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)";
+    const endpoint = "https://api.openai.com/v1/chat/completions";
     const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -256,7 +256,7 @@ async function callOpenAI(apiKey, prompt) {
 }
 
 async function callOpenRouter(apiKey, prompt) {
-    const endpoint = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
+    const endpoint = "https://openrouter.ai/api/v1/chat/completions";
     const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -496,7 +496,7 @@ function extractGeminiInteractionText(data) {
 }
 
 async function callGeminiPresentation(apiKey, prompt) {
-    const endpoint = "[https://generativelanguage.googleapis.com/v1/interactions](https://generativelanguage.googleapis.com/v1/interactions)";
+    const endpoint = "https://generativelanguage.googleapis.com/v1/interactions";
     const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
@@ -516,7 +516,7 @@ async function callGeminiPresentation(apiKey, prompt) {
 }
 
 async function callOpenAIPresentation(apiKey, prompt) {
-    const endpoint = "[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)";
+    const endpoint = "https://api.openai.com/v1/chat/completions";
     const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -535,7 +535,7 @@ async function callOpenAIPresentation(apiKey, prompt) {
 }
 
 async function callOpenRouterPresentation(apiKey, prompt) {
-    const endpoint = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)";
+    const endpoint = "https://openrouter.ai/api/v1/chat/completions";
     const response = await fetch(endpoint, {
         method: "POST",
         headers: {
