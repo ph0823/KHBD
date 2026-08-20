@@ -208,42 +208,74 @@ function getProvider() {
 // ============================================================
 async function callGemini(apiKey, prompt) {
     const endpoint =
-        "https://generativelanguage.googleapis.com/v1beta/interactions";
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
 
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": apiKey,
-            "Api-Revision": "2026-05-20"
+    const requestBody = {
+        systemInstruction: {
+            parts: [
+                {
+                    text: SYSTEM_PROMPT
+                }
+            ]
         },
-        body: JSON.stringify({
-            model: "gemini-3.6-flash",
-            input: prompt,
-            system_instruction: SYSTEM_PROMPT,
 
-            response_format: {
-                type: "text",
-                mime_type: "application/json",
-                schema: KHBD_SCHEMA
+        contents: [
+            {
+                role: "user",
+                parts: [
+                    {
+                        text: prompt
+                    }
+                ]
+            }
+        ],
+
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: KHBD_SCHEMA
+        }
+    };
+
+    let response;
+
+    try {
+        response = await fetch(endpoint, {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey
             },
 
-            generation_config: {
-                temperature: 0.2
-            },
+            body: JSON.stringify(requestBody)
+        });
+    } catch (error) {
+        console.error("Lỗi kết nối Gemini:", error);
 
-            stream: false,
-            store: false
-        })
-    });
+        throw new Error(
+            "Không thể kết nối Gemini API. Hãy kiểm tra mạng, API Key hoặc cấu hình tên miền."
+        );
+    }
 
     const data = await parseProviderJsonResponse(response, "Gemini");
 
-    const outputText = extractGeminiInteractionText(data);
+    const outputText =
+        data?.candidates?.[0]?.content?.parts
+            ?.map(part => part?.text || "")
+            .join("")
+            .trim() || "";
 
     if (!outputText) {
         console.error("Gemini response:", data);
-        throw new Error("Gemini không trả về nội dung KHBD.");
+
+        const reason =
+            data?.promptFeedback?.blockReason ||
+            data?.candidates?.[0]?.finishReason ||
+            "Không xác định";
+
+        throw new Error(
+            `Gemini không trả về nội dung KHBD. Nguyên nhân: ${reason}`
+        );
     }
 
     return cleanJSON(outputText);
@@ -490,34 +522,77 @@ function extractGeminiInteractionText(data) {
 }
 
 async function callGeminiPresentation(apiKey, prompt) {
-    // Cập nhật dòng này trong cả hàm callGemini và callGeminiPresentation
-const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
+    const endpoint =
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
 
     const requestBody = {
-        systemInstruction: { parts: [{ text: PRESENTATION_SYSTEM_PROMPT }] },
-        contents: [{ parts: [{ text: prompt }] }],
+        systemInstruction: {
+            parts: [
+                {
+                    text: PRESENTATION_SYSTEM_PROMPT
+                }
+            ]
+        },
+
+        contents: [
+            {
+                role: "user",
+                parts: [
+                    {
+                        text: prompt
+                    }
+                ]
+            }
+        ],
+
         generationConfig: {
             responseMimeType: "application/json",
-            temperature: 0.2
+            responseSchema: PRESENTATION_SCHEMA
         }
     };
 
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { 
-            "Content-Type": "application/json",
-            "x-goog-api-key": apiKey // Truyền API Key ẩn trong Header
-        },
-        body: JSON.stringify(requestBody)
-    });
+    let response;
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Gemini API Error (${response.status}): ${errorData?.error?.message || "Lỗi kết nối"}`);
+    try {
+        response = await fetch(endpoint, {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey
+            },
+
+            body: JSON.stringify(requestBody)
+        });
+    } catch (error) {
+        console.error("Lỗi kết nối Gemini Presentation:", error);
+
+        throw new Error(
+            "Không thể kết nối Gemini API để tạo bài giảng."
+        );
     }
 
-    const data = await response.json();
-    const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const data = await parseProviderJsonResponse(response, "Gemini");
+
+    const outputText =
+        data?.candidates?.[0]?.content?.parts
+            ?.map(part => part?.text || "")
+            .join("")
+            .trim() || "";
+
+    if (!outputText) {
+        console.error("Gemini Presentation response:", data);
+
+        const reason =
+            data?.promptFeedback?.blockReason ||
+            data?.candidates?.[0]?.finishReason ||
+            "Không xác định";
+
+        throw new Error(
+            `Gemini không trả về nội dung bài giảng. Nguyên nhân: ${reason}`
+        );
+    }
+
     return cleanJSON(outputText);
 }
 
