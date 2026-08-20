@@ -207,7 +207,8 @@ function getProvider() {
 // HÀM GỌI API GEMINI CHUẨN (KHÔNG BỊ LỖI CORS TRÊN TRÌNH DUYỆT)
 // ============================================================
 async function callGemini(apiKey, prompt) {
-    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    
+const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
 
     const requestBody = {
         systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
@@ -497,7 +498,8 @@ function extractGeminiInteractionText(data) {
 }
 
 async function callGeminiPresentation(apiKey, prompt) {
-    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    // Cập nhật dòng này trong cả hàm callGemini và callGeminiPresentation
+const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
 
     const requestBody = {
         systemInstruction: { parts: [{ text: PRESENTATION_SYSTEM_PROMPT }] },
