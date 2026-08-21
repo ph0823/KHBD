@@ -58,6 +58,7 @@ function sanitizePresentationFileName(value) {
         .slice(0, 80) || "bai-giang";
 }
 
+// Sửa lỗi ở đây: Sử dụng pptx.ShapeType thay vì các hằng số không xác định
 function addPptxFooter(slide, pptx, slideNumber, totalSlides, theme) {
     slide.addShape(pptx.ShapeType.line, {
         x: 0.55, y: 7.12, w: 12.2, h: 0,
@@ -91,7 +92,7 @@ function addPptxTitleBar(slide, pptx, title, typeLabel, theme) {
 
 // Tự động kiểm tra tràn chữ và chỉnh cỡ phông phù hợp
 function addPptxBullets(slide, items, options, theme) {
-    const safeItems = (items || []).filter(Boolean).slice(0, 6); // Giới hạn số dòng[cite: 26]
+    const safeItems = (items || []).filter(Boolean).slice(0, 6);
     if (safeItems.length === 0) {
         slide.addText("Nội dung đang được bổ sung.", {
             ...options, fontFace: "Arial", fontSize: 18, italic: true, color: theme.muted, valign: "mid"
@@ -99,7 +100,7 @@ function addPptxBullets(slide, items, options, theme) {
         return;
     }
 
-    // Tự động điều chỉnh cỡ chữ tránh tràn khung[cite: 26]
+    // Tự động điều chỉnh cỡ chữ tránh tràn khung
     const totalChars = safeItems.join("").length;
     let fontSize = 20;
     if (totalChars > 250 || safeItems.length >= 5) fontSize = 16;
@@ -126,7 +127,7 @@ function addPptxBullets(slide, items, options, theme) {
 }
 
 // ============================================================
-// BỐ CỤC THIẾT KẾ ĐỒ HỌA THẬT (NO PLACEHOLDERS)[cite: 26]
+// BỐ CỤC THIẾT KẾ ĐỒ HỌA THẬT (NO PLACEHOLDERS)
 // ============================================================
 
 // 1. Title Hero Layout
@@ -148,11 +149,12 @@ function addTitlePptxSlide(slide, pptx, presentation, slideData, index, totalSli
     addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
-// 2. Grid 2x2 Cards Layout (Trắc nghiệm / Luyện tập)[cite: 26]
+// 2. Grid 2x2 Cards Layout (Trắc nghiệm / Luyện tập)
 function addQuizPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
     slide.background = { color: theme.background };
     addPptxTitleBar(slide, pptx, slideData.title, "CÂU HỎI TRẮC NGHIỆM", theme);
 
+    // Chú ý: dùng pptx.ShapeType.roundRect
     slide.addShape(pptx.ShapeType.roundRect, {
         x: 0.8, y: 1.1, w: 11.7, h: 1.3,
         fill: { color: theme.accentSoft }, line: { color: theme.accent, width: 1.5 }, rectRadius: 0.1
@@ -183,7 +185,7 @@ function addQuizPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
     addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
-// 3. Split 2 Columns Layout (So sánh)[cite: 26]
+// 3. Split 2 Columns Layout (So sánh)
 function addComparisonPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
     slide.background = { color: theme.background };
     addPptxTitleBar(slide, pptx, slideData.title, "SO SÁNH Đối LẬP", theme);
@@ -201,7 +203,7 @@ function addComparisonPptxSlide(slide, pptx, slideData, index, totalSlides, them
     addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
-// 4. Timeline Steps Layout (Quy trình / Thực hành phòng máy)[cite: 26]
+// 4. Timeline Steps Layout (Quy trình / Thực hành phòng máy)
 function addTimelinePptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
     slide.background = { color: theme.background };
     addPptxTitleBar(slide, pptx, slideData.title, "QUY TRÌNH THỰC HÀNH", theme);
@@ -243,7 +245,7 @@ function addTimelinePptxSlide(slide, pptx, slideData, index, totalSlides, theme)
     addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
-// 5. Mindmap Nodes Layout (Sơ đồ tư duy)[cite: 26]
+// 5. Mindmap Nodes Layout (Sơ đồ tư duy)
 function addMindmapPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
     slide.background = { color: theme.background };
     addPptxTitleBar(slide, pptx, slideData.title, "SƠ ĐỒ TƯ DUY", theme);
@@ -278,7 +280,7 @@ function addMindmapPptxSlide(slide, pptx, slideData, index, totalSlides, theme) 
     addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
-// 6. Big Stat Layout (Từ khóa trọng tâm)[cite: 26]
+// 6. Big Stat Layout (Từ khóa trọng tâm)
 function addBigStatPptxSlide(slide, pptx, slideData, index, totalSlides, theme) {
     slide.background = { color: theme.background };
     addPptxTitleBar(slide, pptx, slideData.title, "GHI NHỚ TRỌNG TÂM", theme);
@@ -318,7 +320,7 @@ function addStandardPptxSlide(slide, pptx, slideData, index, totalSlides, theme)
     addPptxFooter(slide, pptx, index + 1, totalSlides, theme);
 }
 
-// Bộ điều hướng Layout động[cite: 26]
+// Bộ điều hướng Layout động
 function renderSmartSlide(slide, pptx, presentation, slideData, index, totalSlides, theme) {
     switch (slideData.layout) {
         case "title_hero":
@@ -361,7 +363,7 @@ async function exportPresentationPptx() {
         return;
     }
 
-    // Tự động kiểm tra chất lượng trước khi cho xuất[cite: 26]
+    // Tự động kiểm tra chất lượng trước khi cho xuất
     if (typeof validatePresentationFull === "function") {
         const errors = validatePresentationFull(data);
         if (errors.length > 0) {
@@ -371,7 +373,10 @@ async function exportPresentationPptx() {
     }
 
     const PptxConstructor = typeof pptxgen !== "undefined" ? pptxgen : (typeof PptxGenJS !== "undefined" ? PptxGenJS : null);
-    if (!PptxConstructor) throw new Error("Chưa tải được thư viện PptxGenJS.");
+    if (!PptxConstructor) {
+        alert("Chưa tải được thư viện PptxGenJS. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau.");
+        return;
+    }
 
     const button = document.getElementById("btn-export-pptx");
     if (button) {
